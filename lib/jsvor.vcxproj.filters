@@ -1,0 +1,98 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\Impl">
+      <UniqueIdentifier>{649482a8-9330-4290-9a1f-38a751bdc465}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Types">
+      <UniqueIdentifier>{aa88f18e-8233-47ee-a1e3-2a14525452a1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Impl\Types">
+      <UniqueIdentifier>{165f8885-0f2c-404d-a7b2-515be59c8481}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="JsonErrors.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="JsonResolver.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="JsonSchema.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="JsonType.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RapidJsonHelpers.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Regex.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="types\CustomTypes.cc">
+      <Filter>Source Files\Types</Filter>
+    </ClCompile>
+    <ClCompile Include="types\PrimitiveTypes.cc">
+      <Filter>Source Files\Types</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Defs.h">
+      <Filter>Header Files\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="JsonType.h">
+      <Filter>Header Files\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="RapidJsonDefs.h">
+      <Filter>Header Files\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="RapidJsonHelpers.h">
+      <Filter>Header Files\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="Regex.h">
+      <Filter>Header Files\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="types\CustomTypes.h">
+      <Filter>Header Files\Impl\Types</Filter>
+    </ClInclude>
+    <ClInclude Include="types\JsonTypeImpl.h">
+      <Filter>Header Files\Impl\Types</Filter>
+    </ClInclude>
+    <ClInclude Include="types\PrimitiveTypes.h">
+      <Filter>Header Files\Impl\Types</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\JsonDefs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\JsonErrors.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\JsonResolver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\JsonSchema.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="types\JsonTypeImpl.inl">
+      <Filter>Source Files\Types</Filter>
+    </None>
+    <None Include="types\PrimitiveTypes.inl">
+      <Filter>Source Files\Types</Filter>
+    </None>
+  </ItemGroup>
+</Project>
