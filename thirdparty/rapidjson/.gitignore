@@ -1,6 +1,0 @@
-/bin/*
-/build/*.exe
-/build/gmake
-/build/vs*/
-/thirdparty/lib
-/intermediate
