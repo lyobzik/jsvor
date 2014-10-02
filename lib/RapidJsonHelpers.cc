@@ -1,7 +1,10 @@
 #include "RapidJsonHelpers.h"
 
+#include <sstream>
+
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
+#include <rapidjson/error/en.h>
 
 #include <JsonSchema.h>
 
@@ -16,7 +19,7 @@ JsonValueConstMemberIterator end(MemberRange const &range) {
 }
 
 MemberRange GetMembers(JsonValue const &value, char const *child_name) {
-	rapidjson::Value::Member const *children = value.FindMember(child_name);
+	JsonValueMember const *children = FindMember(value, child_name);
 	if (children) {
 		if (children->value.IsObject()) {
 			return MemberRange{ children->value.MemberBegin(), children->value.MemberEnd() };
@@ -25,15 +28,24 @@ MemberRange GetMembers(JsonValue const &value, char const *child_name) {
 			throw IncorrectSchema(SchemaErrors::IncorrectMember); // TODO: json_path + child_name
 		}
 	}
-	return MemberRange{ nullptr, nullptr };
+	return MemberRange{ JsonValue::MemberIterator(), JsonValue::MemberIterator() };
 }
 
 MemberRange GetMembers(JsonValue const &value) {
 	if (value.IsObject()) {
 		return MemberRange{ value.MemberBegin(), value.MemberEnd() };
 	}
-	return MemberRange{ nullptr, nullptr };
+	return MemberRange{ JsonValue::MemberIterator(), JsonValue::MemberIterator() };
 }
+
+JsonValueMember const *FindMember(JsonValue const &json, char const *child_name) {
+	auto const &it = json.FindMember(child_name);
+	if (it != json.MemberEnd()) {
+		return it.operator->();
+	}
+	return nullptr;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 BasicJsonValue::BasicJsonValue()
@@ -80,13 +92,13 @@ bool IsEqual(JsonValue const &left, JsonValue const &right) {
 	using namespace rapidjson;
 	if (left.IsObject()) {
 		for (auto const &member : GetMembers(left)) {
-			auto it = right.FindMember(GetValue<char const *>(member.name));
+			JsonValueMember const *it = FindMember(right, GetValue<char const *>(member.name));
 			if (!it || !IsEqual(member.value, it->value)) {
 				return false;
 			}
 		}
 		for (auto const &member : GetMembers(right)) {
-			auto it = left.FindMember(GetValue<char const *>(member.name));
+			JsonValueMember const *it = FindMember(left, GetValue<char const *>(member.name));
 			if (!it) {
 				return false;
 			}
@@ -118,6 +130,14 @@ bool IsEqual(JsonValue const &left, JsonValue const &right) {
 		return true;
 	}
 	return false;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+std::string GetLastError(JsonDocument const &json) {
+	std::stringstream error;
+	error << "Error at " << json.GetErrorOffset() << ": "
+	      << rapidjson::GetParseError_En(json.GetParseError());
+	return error.str();
 }
 
 } // namespace JsonSchemaValidator

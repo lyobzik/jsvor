@@ -13,7 +13,7 @@ JsonCustomType::JsonCustomType(JsonValue const &schema, JsonResolverPtr const &r
 	: JsonType(schema, resolver)
 	, custom_type_() {
 
-	rapidjson::Value::Member const *type = schema.FindMember("type");
+	JsonValueMember const *type = FindMember(schema, "type");
 	if (!type) {
 		RaiseError(SchemaErrors::IncorrectCustomType);
 	}
@@ -44,7 +44,7 @@ JsonAny::JsonAny(JsonValue const &schema, JsonResolverPtr const &resolver)
 	, array_(std::make_shared<JsonArray>(schema, resolver))
 	, null_(std::make_shared<JsonNull>(schema, resolver)) {
 
-	JsonValueMember const *disallow = schema.FindMember("disallow");
+	JsonValueMember const *disallow = FindMember(schema, "disallow");
 	if (disallow) {
 		if (disallow->value.IsArray()) {
 			for (JsonSizeType i = 0; i < disallow->value.Size(); ++i) {
@@ -98,7 +98,7 @@ JsonUnionType::JsonUnionType(JsonValue const &schema, JsonResolverPtr const &res
 	: JsonType(schema, resolver)
 	, type_() {
 
-	JsonValueMember const *type = schema.FindMember("type");
+	JsonValueMember const *type = FindMember(schema, "type");
 	if (!type || !(type->value.IsArray() || type->value.IsObject())) {
 		RaiseError(SchemaErrors::IncorrectUnionType);
 	}

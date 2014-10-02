@@ -14,7 +14,7 @@ void Parse(char const *document, JsonDocument &json) {
 	json.Parse<0>(document);
 
 	if (json.HasParseError()) {
-		throw IncorrectJson(json.GetParseError());
+		throw IncorrectJson(GetLastError(json));
 	}
 }
 

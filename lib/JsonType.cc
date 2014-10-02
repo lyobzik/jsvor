@@ -89,7 +89,7 @@ JsonTypePtr JsonType::Create(JsonValue const &schema, JsonResolverPtr const &res
 		RaiseError(SchemaErrors::NotJsonObject);
 	}
 
-	rapidjson::Value::Member const *type = schema.FindMember("type");
+	JsonValueMember const *type = FindMember(schema, "type");
 	JsonTypeCreator creator = type ? GetCreator(type->value) : MakeJsonType<JsonAny>;
 	if (!creator) {
 		RaiseError(SchemaErrors::CantDetectType);

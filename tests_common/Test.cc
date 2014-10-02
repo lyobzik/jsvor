@@ -67,7 +67,7 @@ void LoadTestCases(fs::path const &path_to_file, JsonSchemaValidator::JsonDocume
 
 std::string GetStringTestData(JsonSchemaValidator::JsonValue const &test_data) {
 	std::stringstream ss;
-	ss << std::boolalpha << "{\"data\": ";
+	ss << std::boolalpha << std::fixed << "{\"data\": ";
 	if (test_data.IsObject() || test_data.IsArray()) ss << ToString(test_data);
 	else if (test_data.IsString()) ss << "\"" << test_data.GetString() << "\"";
 	else if (test_data.IsDouble()) ss << test_data.GetDouble();

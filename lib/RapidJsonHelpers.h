@@ -23,6 +23,8 @@ JsonValueConstMemberIterator end(MemberRange const &range);
 MemberRange GetMembers(JsonValue const &json, char const *child_name);
 MemberRange GetMembers(JsonValue const &json);
 
+JsonValueMember const *FindMember(JsonValue const &json, char const *child_name);
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class BasicJsonValue {
 public:
@@ -207,7 +209,7 @@ bool GetChildValue(JsonValue const &json, char const *child_name, ValueType &val
 	if (!json.IsObject()) {
 		return false;
 	}
-	auto const &child = json.FindMember(child_name);
+	JsonValueMember const *child = FindMember(json, child_name);
 	if (child) {
 		return GetValue(child->value, value);
 	}
@@ -219,7 +221,7 @@ bool GetChildValue(JsonValue const &json, char const *child_name, std::vector<Va
 	if (!json.IsObject()) {
 		return false;
 	}
-	auto const &child = json.FindMember(child_name);
+	JsonValueMember const *child = FindMember(json, child_name);
 	if (child && child->value.IsArray()) {
 		for (JsonSizeType index = 0; index < child->value.Size(); ++index) {
 			ValueType element_value;
@@ -240,6 +242,9 @@ struct StrLess {
 }; // struct StrLess
 
 bool IsEqual(JsonValue const &left, JsonValue const &right);
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+std::string GetLastError(JsonDocument const &json);
 
 } // namespace JsonSchemaValidator
 

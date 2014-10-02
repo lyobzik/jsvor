@@ -3,10 +3,10 @@
 #include <string>
 #include <memory>
 
-#include <wjelement.h>
-
 #include <Validator.h>
 #include <JsonErrors.h>
+
+#include <wjelement.h>
 
 using namespace TestsCommon;
 
