@@ -11,3 +11,5 @@ OBJECTS_DIR = $${OUTPUT_DIR}/Obj
 DESTDIR = $${OUTPUT_DIR}
 
 QMAKE_CLEAN += Makefile*
+
+QMAKE_CXXFLAGS += -std=c++11
