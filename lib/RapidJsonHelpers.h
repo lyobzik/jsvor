@@ -137,6 +137,15 @@ inline bool GetValue<char const *>(JsonValue const &json, char const *&value) {
 }
 
 template <>
+inline bool GetValue<std::string>(JsonValue const &json, std::string &value) {
+	if (json.IsString()) {
+		value = json.GetString();
+		return true;
+	}
+	return false;
+}
+
+template <>
 inline bool GetValue<JsonObjectValue>(JsonValue const &json, JsonObjectValue &value) {
 	if (json.IsObject()) {
 		value.SetValue(json);
@@ -185,6 +194,11 @@ inline long long GetValue<long long>(JsonValue const &json) {
 
 template <>
 inline char const *GetValue<char const *>(JsonValue const &json) {
+	return json.GetString();
+}
+
+template <>
+inline std::string GetValue<std::string>(JsonValue const &json) {
 	return json.GetString();
 }
 
