@@ -5,8 +5,6 @@ CONFIG += staticlib create_prl
 
 QT -= core gui
 
-QMAKE_CXXFLAGS += -std=c++11
-
 INCLUDEPATH += ../include/
 
 HEADERS = ../include/JsonResolver.h \

@@ -5,8 +5,6 @@ CONFIG += link_prl
 
 QT -= core gui
 
-QMAKE_CXXFLAGS += -std=c++11
-
 INCLUDEPATH += ../thirdparty/rapidjson/include/ \
                ../include/ \
                ../tests_common/ \

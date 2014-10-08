@@ -84,6 +84,8 @@ public:
 		, error_(error) {
 	}
 
+	virtual ~IncorrectJson() throw() { }
+
 	virtual char const *what() const throw() {
 		return error_.c_str();
 	}
@@ -100,6 +102,8 @@ public:
 		, error_(error) {
 	}
 
+	virtual ~IncorrectSchema() throw() { }
+
 	virtual char const *what() const throw();
 
 private:
@@ -110,6 +114,8 @@ private:
 class IncorrectDocument : public Error {
 public:
 	explicit IncorrectDocument(ValidationResult const &result);
+
+	virtual ~IncorrectDocument() throw() { }
 
 	virtual char const *what() const throw();
 

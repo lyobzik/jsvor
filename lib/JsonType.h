@@ -32,7 +32,7 @@ class JsonType
 {
 public:
 	JsonType(JsonValue const &schema, JsonResolverPtr const &resolver);
-	virtual ~JsonType() = default;
+	virtual ~JsonType() { }
 
 	virtual void Validate(JsonValue const &json, ValidationResult &result) const;
 

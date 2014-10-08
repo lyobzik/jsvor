@@ -74,7 +74,10 @@ JsonSchema::JsonSchema(char const *schema, JsonResolverPtr const &resolver)
 }
 
 JsonSchema::JsonSchema(std::string const &schema, JsonResolverPtr const &resolver)
-	: JsonSchema(schema.c_str(), resolver) {
+	: impl_(std::make_shared<Impl>()) {
+
+	Parse(schema.c_str(), impl_->schema_document_);
+	Initialize(impl_->schema_document_, resolver);
 }
 
 JsonSchema::JsonSchema(JsonValue const &schema, JsonResolverPtr const &resolver)
