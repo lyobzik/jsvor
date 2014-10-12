@@ -34,7 +34,7 @@ JsonType::JsonType(JsonValue const &schema, JsonResolverPtr const &resolver)
 
 	//TODO: Check $schema.
 	GetChildValue(schema, "id", id_);
-	GetChildValue(schema, "ref", ref_);
+	GetChildValue(schema, "$ref", ref_);
 	//TODO: How to detect json_path?
 	GetChildValue(schema, "required", required_);
 
