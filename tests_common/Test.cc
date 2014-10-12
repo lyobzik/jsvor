@@ -33,26 +33,8 @@ std::vector<fs::path> GetTestFiles()
 	std::vector<fs::path> test_files;
 	std::copy_if(it, endIt, std::back_inserter(test_files), [](fs::directory_entry const &entry) -> bool {
 		return fs::is_regular_file(entry) &&
-			(boost::algorithm::ends_with(entry.path().string(), "enum.json") ||
-			 boost::algorithm::ends_with(entry.path().string(), "minimum.json") ||
-			 boost::algorithm::ends_with(entry.path().string(), "maximum.json") ||
-			 boost::algorithm::ends_with(entry.path().string(), "minLength.json") ||
-			 boost::algorithm::ends_with(entry.path().string(), "maxLength.json") ||
-			 boost::algorithm::ends_with(entry.path().string(), "items.json") ||
-			 boost::algorithm::ends_with(entry.path().string(), "maxItems.json") ||
-			 boost::algorithm::ends_with(entry.path().string(), "minItems.json") ||
-			 boost::algorithm::ends_with(entry.path().string(), "uniqueItems.json") ||
-			 boost::algorithm::ends_with(entry.path().string(), "divisibleBy.json") ||
-			 boost::algorithm::ends_with(entry.path().string(), "additionalItems.json") ||
-			 boost::algorithm::ends_with(entry.path().string(), "dependencies.json") ||
-			 boost::algorithm::ends_with(entry.path().string(), "pattern.json") ||
-			 boost::algorithm::ends_with(entry.path().string(), "required.json") ||
-			 boost::algorithm::ends_with(entry.path().string(), "patternProperties.json") ||
-			 boost::algorithm::ends_with(entry.path().string(), "properties.json") ||
-			 boost::algorithm::ends_with(entry.path().string(), "additionalProperties.json") ||
-			 boost::algorithm::ends_with(entry.path().string(), "type.json") ||
-			 boost::algorithm::ends_with(entry.path().string(), "disallow.json") ||
-			 boost::algorithm::ends_with(entry.path().string(), "extends.json"));
+		       boost::algorithm::ends_with(entry.path().string(), ".json") &&
+		       entry.path().filename().string() != "ref.json";
 	});
 	return test_files;
 }
