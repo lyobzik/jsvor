@@ -69,10 +69,6 @@ bool JsonType::IsRequired() const
 	return required_;
 }
 
-void JsonType::SetResolver(JsonResolverPtr const &resolver) {
-	resolver_ = resolver;
-}
-
 void JsonType::ValidateExtends(JsonValue const &json, ValidationResult &result) const {
 	for (auto const &json_type : extends_) {
 		json_type->Validate(json, result);
@@ -152,20 +148,19 @@ void JsonType::RaiseError(SchemaErrors error) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-template <>
-bool GetValue<JsonTypePtr>(JsonValue const &json, JsonTypePtr &value) {
+bool GetValue(JsonValue const &json, JsonTypePtr &value, JsonResolverPtr const &resolver) {
 	if (json.IsObject()) {
-		value = JsonType::Create(json, JsonResolverPtr());
+		value = JsonType::Create(json, resolver);
 		return true;
 	}
 	return false;
 }
 
-template <>
-bool GetValue<std::vector<JsonTypePtr>>(JsonValue const &json, std::vector<JsonTypePtr> &value) {
+bool GetValue(JsonValue const &json, std::vector<JsonTypePtr> &value,
+              JsonResolverPtr const &resolver) {
 	if (json.IsArray()) {
 		for (JsonSizeType i = 0; i < json.Size(); ++i) {
-			value.push_back(JsonType::Create(json[i], JsonResolverPtr()));
+			value.push_back(JsonType::Create(json[i], resolver));
 		}
 		return true;
 	}

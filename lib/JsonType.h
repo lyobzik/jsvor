@@ -20,10 +20,10 @@ struct JsonTypeProperty {
 	PropertyType value;
 }; // class JsonTypeProperty
 
-template <typename ValueType>
+template <typename ValueType, typename ...Args>
 bool GetChildValue(JsonValue const &json, char const *child_name,
-                   JsonTypeProperty<ValueType> &value) {
-	value.exists = GetChildValue(json, child_name, value.value);
+                   JsonTypeProperty<ValueType> &value, Args... args) {
+	value.exists = GetChildValue(json, child_name, value.value, args...);
 	return value.exists;
 }
 
@@ -36,7 +36,6 @@ public:
 	virtual void Validate(JsonValue const &json, ValidationResult &result) const;
 
 	bool IsRequired() const;
-	void SetResolver(JsonResolverPtr const &resolver);
 
 	static JsonTypePtr Create(JsonValue const &value, JsonResolverPtr const &resolver);
 
@@ -66,56 +65,9 @@ private:
 }; // class JsonType
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-template <>
-bool GetValue<JsonTypePtr>(JsonValue const &json, JsonTypePtr &value);
+bool GetValue(JsonValue const &json, JsonTypePtr &value, JsonResolverPtr const &resolver);
 
-template <>
-bool GetValue<std::vector<JsonTypePtr>>(JsonValue const &json, std::vector<JsonTypePtr> &value);
-
-template <typename ValueType>
-bool GetChildValue(JsonValue const &json, char const *child_name, ValueType &value,
-                   JsonResolverPtr const &resolver) {
-	if (GetChildValue(json, child_name, value)) {
-		value->SetResolver(resolver);
-		return true;
-	}
-	return false;
-}
-
-template <typename ValueType>
-bool GetChildValue(JsonValue const &json, char const *child_name, std::vector<ValueType> &value,
-                   JsonResolverPtr const &resolver) {
-	if (GetChildValue(json, child_name, value)) {
-		for (auto &item: value) {
-			item->SetResolver(resolver);
-		}
-		return true;
-	}
-	return false;
-}
-
-template <typename ValueType>
-bool GetChildValue(JsonValue const &json, char const *child_name,
-                   JsonTypeProperty<ValueType> &value,
-                   JsonResolverPtr const &resolver) {
-	if (GetChildValue(json, child_name, value)) {
-		value.value->SetResolver(resolver);
-		return true;
-	}
-	return false;
-}
-
-template <typename ValueType>
-bool GetChildValue(JsonValue const &json, char const *child_name,
-                   JsonTypeProperty<std::vector<ValueType>> &value,
-                   JsonResolverPtr const &resolver) {
-	if (GetChildValue(json, child_name, value)) {
-		for (auto &item: value.value) {
-			item->SetResolver(resolver);
-		}
-		return true;
-	}
-	return false;
-}
+bool GetValue(JsonValue const &json, std::vector<JsonTypePtr> &value,
+              JsonResolverPtr const &resolver);
 
 } // namespace JsonSchemaValidator

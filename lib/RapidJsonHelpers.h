@@ -218,20 +218,21 @@ inline JsonNullValue GetValue<JsonNullValue>(JsonValue const &json) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename ValueType>
-bool GetChildValue(JsonValue const &json, char const *child_name, ValueType &value) {
+template <typename ValueType, typename ...Args>
+bool GetChildValue(JsonValue const &json, char const *child_name, ValueType &value, Args... args) {
 	if (!json.IsObject()) {
 		return false;
 	}
 	JsonValueMember const *child = FindMember(json, child_name);
 	if (child) {
-		return GetValue(child->value, value);
+		return GetValue(child->value, value, args...);
 	}
 	return false;
 }
 
-template <typename ValueType>
-bool GetChildValue(JsonValue const &json, char const *child_name, std::vector<ValueType> &value) {
+template <typename ValueType, typename ...Args>
+bool GetChildValue(JsonValue const &json, char const *child_name, std::vector<ValueType> &value,
+                   Args... args) {
 	if (!json.IsObject()) {
 		return false;
 	}
@@ -239,7 +240,7 @@ bool GetChildValue(JsonValue const &json, char const *child_name, std::vector<Va
 	if (child && child->value.IsArray()) {
 		for (JsonSizeType index = 0; index < child->value.Size(); ++index) {
 			ValueType element_value;
-			if (GetValue(child->value[index], element_value)) {
+			if (GetValue(child->value[index], element_value, args...)) {
 				value.push_back(element_value);
 			}
 		}
