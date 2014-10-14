@@ -38,9 +38,9 @@ JsonType::JsonType(JsonValue const &schema, JsonResolverPtr const &resolver)
 	//TODO: How to detect json_path?
 	GetChildValue(schema, "required", required_);
 
-	if (!GetChildValue(schema, "extends", extends_)) {
+	if (!GetChildValue(schema, "extends", extends_, resolver_)) {
 		JsonTypePtr extended_type;
-		if (GetChildValue(schema, "extends", extended_type)) {
+		if (GetChildValue(schema, "extends", extended_type, resolver_)) {
 			extends_.push_back(extended_type);
 		}
 	}
@@ -67,6 +67,10 @@ void JsonType::Validate(JsonValue const &json, ValidationResult &result) const {
 bool JsonType::IsRequired() const
 {
 	return required_;
+}
+
+void JsonType::SetResolver(JsonResolverPtr const &resolver) {
+	resolver_ = resolver;
 }
 
 void JsonType::ValidateExtends(JsonValue const &json, ValidationResult &result) const {

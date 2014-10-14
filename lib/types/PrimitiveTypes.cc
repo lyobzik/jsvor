@@ -133,7 +133,7 @@ JsonObject::JsonObject(JsonValue const &schema, JsonResolverPtr const &resolver)
 
 	GetChildValue(schema, "additionalProperties", may_contains_additional_properties_);
 	if (!may_contains_additional_properties_.exists) {
-		GetChildValue(schema, "additionalProperties", additional_properties_);
+		GetChildValue(schema, "additionalProperties", additional_properties_, resolver);
 	}
 
 	for (auto const &member : GetMembers(schema, "dependencies")) {
@@ -236,12 +236,12 @@ JsonArray::JsonArray(JsonValue const &schema, JsonResolverPtr const &resolver)
 
 	GetChildValue(schema, "uniqueItems", unique_items_);
 
-	GetChildValue(schema, "items", items_);
-	GetChildValue(schema, "items", items_array_);
+	GetChildValue(schema, "items", items_, resolver);
+	GetChildValue(schema, "items", items_array_, resolver);
 
 	GetChildValue(schema, "additionalItems", may_contains_additional_items_);
 	if (!may_contains_additional_items_.exists) {
-		GetChildValue(schema, "additionalItems", additional_items_);
+		GetChildValue(schema, "additionalItems", additional_items_, resolver);
 	}
 }
 

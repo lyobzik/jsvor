@@ -28,8 +28,7 @@ bool GetChildValue(JsonValue const &json, char const *child_name,
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-class JsonType
-{
+class JsonType {
 public:
 	JsonType(JsonValue const &schema, JsonResolverPtr const &resolver);
 	virtual ~JsonType() { }
@@ -37,6 +36,7 @@ public:
 	virtual void Validate(JsonValue const &json, ValidationResult &result) const;
 
 	bool IsRequired() const;
+	void SetResolver(JsonResolverPtr const &resolver);
 
 	static JsonTypePtr Create(JsonValue const &value, JsonResolverPtr const &resolver);
 
@@ -71,5 +71,51 @@ bool GetValue<JsonTypePtr>(JsonValue const &json, JsonTypePtr &value);
 
 template <>
 bool GetValue<std::vector<JsonTypePtr>>(JsonValue const &json, std::vector<JsonTypePtr> &value);
+
+template <typename ValueType>
+bool GetChildValue(JsonValue const &json, char const *child_name, ValueType &value,
+                   JsonResolverPtr const &resolver) {
+	if (GetChildValue(json, child_name, value)) {
+		value->SetResolver(resolver);
+		return true;
+	}
+	return false;
+}
+
+template <typename ValueType>
+bool GetChildValue(JsonValue const &json, char const *child_name, std::vector<ValueType> &value,
+                   JsonResolverPtr const &resolver) {
+	if (GetChildValue(json, child_name, value)) {
+		for (auto &item: value) {
+			item->SetResolver(resolver);
+		}
+		return true;
+	}
+	return false;
+}
+
+template <typename ValueType>
+bool GetChildValue(JsonValue const &json, char const *child_name,
+                   JsonTypeProperty<ValueType> &value,
+                   JsonResolverPtr const &resolver) {
+	if (GetChildValue(json, child_name, value)) {
+		value.value->SetResolver(resolver);
+		return true;
+	}
+	return false;
+}
+
+template <typename ValueType>
+bool GetChildValue(JsonValue const &json, char const *child_name,
+                   JsonTypeProperty<std::vector<ValueType>> &value,
+                   JsonResolverPtr const &resolver) {
+	if (GetChildValue(json, child_name, value)) {
+		for (auto &item: value.value) {
+			item->SetResolver(resolver);
+		}
+		return true;
+	}
+	return false;
+}
 
 } // namespace JsonSchemaValidator
