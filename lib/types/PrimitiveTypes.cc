@@ -9,7 +9,7 @@ namespace JsonSchemaValidator {
 
 JsonString::JsonString(JsonValue const &schema, JsonResolverPtr const &resolver)
 	: JsonTypeImpl(schema, resolver)
-	, min_length_(std::numeric_limits<size_t>::min())
+	, min_length_(std::numeric_limits<size_t>::lowest())
 	, max_length_(std::numeric_limits<size_t>::max())
 	, pattern_() {
 
@@ -43,7 +43,7 @@ void JsonString::CheckTypeRestrictions(JsonValue const &json, ValidationResult &
 template <typename Type>
 JsonBaseNumber<Type>::JsonBaseNumber(JsonValue const &schema, JsonResolverPtr const &resolver)
 	: Parent(schema, resolver)
-	, minimum_(std::numeric_limits<typename Parent::ValueType>::min())
+	, minimum_(std::numeric_limits<typename Parent::ValueType>::lowest())
 	, maximum_(std::numeric_limits<typename Parent::ValueType>::max())
 	, exclusive_minimum_(false)
 	, exclusive_maximum_(false)
