@@ -1,0 +1,12 @@
+source_group("Header Files" FILES ${HEADERS})
+source_group("Source Files" FILES ${SOURCES})
+
+if(${PROJECT_TYPE} STREQUAL executable)
+	add_executable(${PROJECT} ${HEADERS} ${SOURCES})
+elseif(${PROJECT_TYPE} STREQUAL library)
+	add_library(${PROJECT} STATIC ${HEADERS} ${SOURCES})
+else()
+	message(FATAL_ERROR "Incorrent project type ${PROJECT_TYPE} for ${PROJECT}")
+endif()
+
+target_link_libraries(${PROJECT} ${LIBS})
