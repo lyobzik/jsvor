@@ -5,6 +5,7 @@
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
 #include <rapidjson/error/en.h>
+#include <rapidjson/rapidjson.h>
 
 #include <JsonSchema.h>
 
@@ -138,6 +139,16 @@ std::string GetLastError(JsonDocument const &json) {
 	error << "Error at " << json.GetErrorOffset() << ": "
 	      << rapidjson::GetParseError_En(json.GetParseError());
 	return error.str();
+}
+
+std::string ToString(JsonValue const &value) {
+	using namespace rapidjson;
+	GenericStringBuffer<UTF8<> > buffer;
+	Writer<GenericStringBuffer<UTF8<> > > writer(buffer);
+	value.Accept(writer);
+
+	std::string string = buffer.GetString();
+	return buffer.GetString();
 }
 
 } // namespace JsonSchemaValidator

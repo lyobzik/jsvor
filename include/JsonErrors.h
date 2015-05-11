@@ -3,6 +3,8 @@
 #include <string>
 #include <exception>
 
+#include "../include/JsonDefs.h"
+
 namespace JsonSchemaValidator {
 
 // Errors that may occur in json-document validation.
@@ -58,17 +60,23 @@ enum class SchemaErrors {
 class ValidationResult {
 public:
 	ValidationResult();
-	explicit ValidationResult(DocumentErrors error);
 
-	void SetError(DocumentErrors error);
+	void SetError(DocumentErrors error, std::string const &requirements, JsonValue const &json);
 
 	DocumentErrors Error() const;
 	char const *ErrorDescription() const;
+	char const *RequirementsDescription() const;
+	char const *Json() const;
+
+	char const *DetailedErrorDescription() const;
 
 	operator bool() const;
 
 private:
 	DocumentErrors error_;
+	std::string requirements_;
+	std::string json_;
+	std::string mutable detailed_;
 }; // class ValidationResult
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

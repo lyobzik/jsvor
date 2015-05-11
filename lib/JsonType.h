@@ -40,7 +40,8 @@ public:
 	static JsonTypePtr Create(JsonValue const &value, JsonResolverPtr const &resolver);
 
 protected:
-	static void RaiseError(DocumentErrors error, ValidationResult &result);
+	static void RaiseError(DocumentErrors error, std::string const &requirements,
+	                       JsonValue const &json, ValidationResult &result);
 	static void RaiseError(SchemaErrors error);
 	static JsonTypePtr CreateJsonTypeFromArrayElement(JsonValue const &schema,
 	                                                  JsonResolverPtr const &resolver);

@@ -1,12 +1,14 @@
 #pragma once
 
 #include <map>
+#include <cmath>
 #include <string>
 #include <vector>
-#include <functional>
-#include <cmath>
 #include <limits>
 #include <memory>
+#include <ostream>
+#include <sstream>
+#include <functional>
 
 #include "RapidJsonDefs.h"
 
@@ -260,6 +262,36 @@ bool IsEqual(JsonValue const &left, JsonValue const &right);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 std::string GetLastError(JsonDocument const &json);
+std::string ToString(JsonValue const &value);
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+template <typename ValueType>
+void WriteToStream(std::ostream& stream, const std::vector<ValueType>& values) {
+	stream << "[";
+	for(const auto& value: values) {
+		stream << std::boolalpha << value << std::noboolalpha << "; ";
+	}
+	stream << "]";
+}
+
+
+template <typename Value>
+void WriteToStream(std::ostream& stream, Value&& value) {
+	stream << std::boolalpha << value << std::noboolalpha;
+}
+
+template <typename Value, typename... Values>
+void WriteToStream(std::ostream& stream, Value&& value, Values&&... values) {
+	WriteToStream(stream, value);
+	WriteToStream(stream, values...);
+}
+
+template <typename... Values>
+std::string ToString(Values&&... values) {
+	std::ostringstream stream;
+	WriteToStream(stream, values...);
+	return stream.str();
+}
 
 } // namespace JsonSchemaValidator
 

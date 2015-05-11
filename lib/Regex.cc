@@ -4,10 +4,15 @@
 
 namespace JsonSchemaValidator {
 
-Regex::Regex() {
+Regex::Regex(char const *pattern)
+	: pattern_(pattern) {
 }
 
 Regex::~Regex() {
+}
+
+char const *Regex::Pattern() const {
+	return pattern_.c_str();
 }
 
 } // namespace JsonSchemaValidator
@@ -32,7 +37,7 @@ private:
 }; // class StdRegex : public Regex
 
 StdRegex::StdRegex(char const *pattern)
-	: Regex()
+	: Regex(pattern)
 	, impl_(std::make_shared<std::regex>(pattern)) {
 }
 
@@ -69,7 +74,7 @@ private:
 }; // class Re2Regex : public Regex
 
 Re2Regex::Re2Regex(char const *pattern)
-	: Regex()
+	: Regex(pattern)
 	, impl_(std::make_shared<re2::RE2>(pattern)) {
 }
 

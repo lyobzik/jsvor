@@ -53,7 +53,9 @@ void JsonTypeImpl<Type>::CheckEnumsRestrictions(JsonValue const &json,
 	if (enum_.exists) {
 		Type value = GetValue<Type>(json);
 		if (!JsonChecker<Type>::ContainsValue(enum_.value, value)) {
-			return RaiseError(DocumentErrors::EnumValue, result);
+			return RaiseError(DocumentErrors::EnumValue,
+			                  ToString("Must be one of ", /*enum_.value,*/ "."),
+			                  json, result);
 		}
 	}
 }
