@@ -31,18 +31,18 @@ void JsonString::CheckTypeRestrictions(JsonValue const &json, ValidationResult &
 	if (json.GetStringLength() < min_length_) {
 		return RaiseError(DocumentErrors::MinimalLength,
 		                  ToString("Value length must be >=", min_length_, "."),
-		                  json, result);
+		                  result);
 	}
 	if (json.GetStringLength() > max_length_) {
 		return RaiseError(DocumentErrors::MaximalLength,
 		                  ToString("Value length must be <=", max_length_, "."),
-		                  json, result);
+		                  result);
 	}
 
 	if (pattern_ && !pattern_->IsCorrespond(GetValue<char const *>(json))) {
 		return RaiseError(DocumentErrors::Pattern,
 		                  ToString("Must correspond pattern '", pattern_->Pattern(), "."),
-		                  json, result);
+		                  result);
 	}
 }
 
@@ -201,7 +201,7 @@ void JsonObject::CheckTypeRestrictions(JsonValue const &json, ValidationResult &
 			if (may_contains_additional_properties_.exists) {
 				if (!may_contains_additional_properties_.value) {
 					return RaiseError(DocumentErrors::AdditionalProperty,
-					                  "Cannot contains additional property.", json, result);
+					                  "Cannot contains additional property.", result);
 				}
 			}
 			else if (additional_properties_.exists) {
@@ -218,7 +218,7 @@ void JsonObject::CheckTypeRestrictions(JsonValue const &json, ValidationResult &
 						return RaiseError(DocumentErrors::DependenciesRestrictions,
 						                  ToString("Doesn't satisfy on dependency restriction of "
 						                           "property ", name, "."),
-						                  json, result);
+						                  result);
 					}
 				}
 			}
@@ -235,7 +235,7 @@ void JsonObject::CheckTypeRestrictions(JsonValue const &json, ValidationResult &
 		if (property.second->IsRequired() && !json.HasMember(property.first)) {
 			return RaiseError(DocumentErrors::RequiredProperty,
 			                  ToString("Must contain property '", property.first, "'."),
-			                  json, result);
+			                  result);
 		}
 	}
 }
@@ -280,12 +280,12 @@ void JsonArray::CheckTypeRestrictions(JsonValue const &json, ValidationResult &r
 	if (json.Size() < min_items_) {
 		return RaiseError(DocumentErrors::MinimalItemsCount,
 		                  ToString("Array must contain >=", min_items_, " items."),
-		                  json, result);
+		                  result);
 	}
 	if (json.Size() > max_items_) {
 		return RaiseError(DocumentErrors::MaximalItemsCount,
 		                  ToString("Array must contain <=", max_items_, " items."),
-		                  json, result);
+		                  result);
 	}
 
 	if (unique_items_) {
@@ -295,7 +295,7 @@ void JsonArray::CheckTypeRestrictions(JsonValue const &json, ValidationResult &r
 					return RaiseError(DocumentErrors::UniqueItems,
 					                  ToString("Must not contain equal items ",
 					                           ToString(json[i]), " and ", ToString(json[j]), "."),
-					                  json, result);
+					                  result);
 				}
 			}
 		}
@@ -317,7 +317,7 @@ void JsonArray::CheckTypeRestrictions(JsonValue const &json, ValidationResult &r
 			if (may_contains_additional_items_.exists) {
 				if (!may_contains_additional_items_.value) {
 					return RaiseError(DocumentErrors::AdditionalItems,
-					                  "Cannot be additional item of array.", json, result);
+					                  "Cannot be additional item of array.", result);
 				}
 			}
 			else if (additional_items_.exists) {

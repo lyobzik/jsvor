@@ -19,19 +19,19 @@ void JsonBaseNumber<Type>::CheckTypeRestrictions(JsonValue const &json,
 		return this->RaiseError(DocumentErrors::MinimumValue,
 		                        ToString("Must be ", exclusive_minimum_ ? ">" : ">=", minimum_,
 		                                 "."),
-		                        json, result);
+		                        result);
 	}
 	if ((maximum_ < value) || (exclusive_maximum_ && IsEqual(maximum_, value))) {
 		return this->RaiseError(DocumentErrors::MaximumValue,
 		                        ToString("Must be ", exclusive_minimum_ ? "<" : "<=", minimum_,
 		                                 "."),
-		                        json, result);
+		                        result);
 	}
 
 	if (divisible_by_.exists && !CheckDivisibility(value, divisible_by_.value)) {
 		return this->RaiseError(DocumentErrors::DivisibleValue,
 		                        ToString("Must be divisible by ", divisible_by_.value, "."),
-		                        json, result);
+		                        result);
 	}
 }
 

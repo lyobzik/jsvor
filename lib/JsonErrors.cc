@@ -6,16 +6,15 @@ namespace JsonSchemaValidator {
 
 ValidationResult::ValidationResult()
 	: error_(DocumentErrors::None)
-	, requirements_()
-	, json_()
+	, description_()
+	, path_()
 	, detailed_() {
 }
 
-void ValidationResult::SetError(DocumentErrors error, std::string const &requirements,
-                                JsonValue const &json, std::string const &path) {
+void ValidationResult::SetError(DocumentErrors error, std::string const &description,
+                                std::string const &path) {
 	error_ = error;
-	requirements_ = requirements;
-	json_ = ToString(json);
+	description_ = description;
 	path_ = path;
 }
 
@@ -74,16 +73,12 @@ char const *ValidationResult::ErrorDescription() const {
 	return "Unknown error";
 }
 
-char const *ValidationResult::RequirementsDescription() const {
-	return requirements_.c_str();
-}
-
-char const *ValidationResult::Json() const {
-	return json_.c_str();
+char const *ValidationResult::Description() const {
+	return description_.c_str();
 }
 
 char const *ValidationResult::DetailedErrorDescription() const {
-	detailed_ = ToString(ErrorDescription(), " ", RequirementsDescription(), " ", Json(), " at ", path_);
+	detailed_ = ToString(ErrorDescription(), " ", Description(), " at ", path_);
 	return detailed_.c_str();
 }
 

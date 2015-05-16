@@ -54,7 +54,7 @@ void JsonType::Validate(JsonValue const &json, ValidationResult &result) const {
 	}
 	if (result) {
 		if (!CheckValueType(json)) {
-			result.SetError(DocumentErrors::Type, "", json, path_);
+			RaiseError(DocumentErrors::Type, "", result);
 		}
 	}
 	if (result) {
@@ -147,8 +147,8 @@ JsonTypePtr JsonType::CreateJsonTypeFromArrayElement(JsonValue const &schema,
 }
 
 void JsonType::RaiseError(DocumentErrors error, std::string const &requirements,
-                          JsonValue const &json, ValidationResult &result) const {
-	result.SetError(error, requirements, json, path_);
+                          ValidationResult &result) const {
+	result.SetError(error, requirements, path_);
 }
 
 void JsonType::RaiseError(SchemaErrors error) {

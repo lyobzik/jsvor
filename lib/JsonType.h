@@ -44,7 +44,7 @@ protected:
 	std::string MemberPath(char const *member) const;
 
 	void RaiseError(DocumentErrors error, std::string const &requirements,
-	                       JsonValue const &json, ValidationResult &result) const; //TODO
+	                ValidationResult &result) const;
 	static void RaiseError(SchemaErrors error);
 	static JsonTypePtr CreateJsonTypeFromArrayElement(JsonValue const &schema,
 	                                                  JsonResolverPtr const &resolver,
