@@ -12,10 +12,11 @@ ValidationResult::ValidationResult()
 }
 
 void ValidationResult::SetError(DocumentErrors error, std::string const &requirements,
-                                JsonValue const &json) {
+                                JsonValue const &json, std::string const &path) {
 	error_ = error;
 	requirements_ = requirements;
 	json_ = ToString(json);
+	path_ = path;
 }
 
 DocumentErrors ValidationResult::Error() const {
@@ -82,7 +83,7 @@ char const *ValidationResult::Json() const {
 }
 
 char const *ValidationResult::DetailedErrorDescription() const {
-	detailed_ = ToString(ErrorDescription(), " ", RequirementsDescription(), " ", Json());
+	detailed_ = ToString(ErrorDescription(), " ", RequirementsDescription(), " ", Json(), " at ", path_);
 	return detailed_.c_str();
 }
 

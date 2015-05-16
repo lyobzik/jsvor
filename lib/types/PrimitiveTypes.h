@@ -13,7 +13,8 @@ namespace JsonSchemaValidator {
 
 class JsonString : public JsonTypeImpl<char const *> {
 public:
-	JsonString(JsonValue const &schema, JsonResolverPtr const &resolver);
+	JsonString(JsonValue const &schema, JsonResolverPtr const &resolver,
+	           std::string const &path);
 
 private:
 	virtual bool CheckValueType(JsonValue const &json) const;
@@ -32,7 +33,8 @@ class JsonBaseNumber : public JsonTypeImpl<Type> {
 	typedef JsonTypeImpl<Type> Parent;
 
 public:
-	JsonBaseNumber(JsonValue const &schema, JsonResolverPtr const &resolver);
+	JsonBaseNumber(JsonValue const &schema, JsonResolverPtr const &resolver,
+	               std::string const &path);
 
 private:
 	typedef double DividerType;
@@ -54,7 +56,8 @@ private:
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class JsonNumber : public JsonBaseNumber<double> {
 public:
-	JsonNumber(JsonValue const &schema, JsonResolverPtr const &resolver);
+	JsonNumber(JsonValue const &schema, JsonResolverPtr const &resolver,
+	           std::string const &path);
 
 private:
 	virtual bool CheckValueType(JsonValue const &json) const;
@@ -63,7 +66,8 @@ private:
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class JsonInteger : public JsonBaseNumber<long long> {
 public:
-	JsonInteger(JsonValue const &schema, JsonResolverPtr const &resolver);
+	JsonInteger(JsonValue const &schema, JsonResolverPtr const &resolver,
+	            std::string const &path);
 
 private:
 	virtual bool CheckValueType(JsonValue const &json) const;
@@ -72,7 +76,8 @@ private:
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class JsonBoolean : public JsonTypeImpl<bool> {
 public:
-	JsonBoolean(JsonValue const &schema, JsonResolverPtr const &resolver);
+	JsonBoolean(JsonValue const &schema, JsonResolverPtr const &resolver,
+	            std::string const &path);
 
 private:
 	virtual bool CheckValueType(JsonValue const &json) const;
@@ -82,7 +87,8 @@ private:
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class JsonNull : public JsonTypeImpl<JsonNullValue> {
 public:
-	JsonNull(JsonValue const &schema, JsonResolverPtr const &resolver);
+	JsonNull(JsonValue const &schema, JsonResolverPtr const &resolver,
+	         std::string const &path);
 
 private:
 	virtual bool CheckValueType(JsonValue const &json) const;
@@ -92,11 +98,14 @@ private:
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class JsonObject : public JsonTypeImpl<JsonObjectValue> {
 public:
-	JsonObject(JsonValue const &schema, JsonResolverPtr const &resolver);
+	JsonObject(JsonValue const &schema, JsonResolverPtr const &resolver,
+	           std::string const &path);
 
 private:
 	virtual bool CheckValueType(JsonValue const &json) const;
 	virtual void CheckTypeRestrictions(JsonValue const &json, ValidationResult &result) const;
+
+	JsonTypePtr CreateMember(JsonValueMember const &member, JsonResolverPtr const &resolver) const;
 
 	std::map<char const *, JsonTypePtr, StrLess> properties_;
 
@@ -112,7 +121,8 @@ private:
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class JsonArray : public JsonTypeImpl<JsonArrayValue> {
 public:
-	JsonArray(JsonValue const &schema, JsonResolverPtr const &resolver);
+	JsonArray(JsonValue const &schema, JsonResolverPtr const &resolver,
+	          std::string const &path);
 
 private:
 	virtual bool CheckValueType(JsonValue const &json) const;

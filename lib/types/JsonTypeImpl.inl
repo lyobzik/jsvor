@@ -40,8 +40,9 @@ struct JsonChecker<JsonNullValue> : public JsonCheckerNotOrdered {
 } // namespace
 
 template <typename Type>
-JsonTypeImpl<Type>::JsonTypeImpl(JsonValue const &schema, JsonResolverPtr const &resolver)
-	: JsonType(schema, resolver)
+JsonTypeImpl<Type>::JsonTypeImpl(JsonValue const &schema, JsonResolverPtr const &resolver,
+                                 std::string const &path)
+	: JsonType(schema, resolver, path)
 	, enum_() {
 
 	GetChildValue(schema, "enum", enum_);

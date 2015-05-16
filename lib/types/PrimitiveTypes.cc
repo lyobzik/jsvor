@@ -7,8 +7,9 @@
 
 namespace JsonSchemaValidator {
 
-JsonString::JsonString(JsonValue const &schema, JsonResolverPtr const &resolver)
-	: JsonTypeImpl(schema, resolver)
+JsonString::JsonString(JsonValue const &schema, JsonResolverPtr const &resolver,
+                       std::string const &path)
+	: JsonTypeImpl(schema, resolver, path)
 	, min_length_(std::numeric_limits<size_t>::lowest())
 	, max_length_(std::numeric_limits<size_t>::max())
 	, pattern_() {
@@ -47,8 +48,9 @@ void JsonString::CheckTypeRestrictions(JsonValue const &json, ValidationResult &
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename Type>
-JsonBaseNumber<Type>::JsonBaseNumber(JsonValue const &schema, JsonResolverPtr const &resolver)
-	: Parent(schema, resolver)
+JsonBaseNumber<Type>::JsonBaseNumber(JsonValue const &schema, JsonResolverPtr const &resolver,
+                                     std::string const &path)
+	: Parent(schema, resolver, path)
 	, minimum_(std::numeric_limits<typename Parent::ValueType>::lowest())
 	, maximum_(std::numeric_limits<typename Parent::ValueType>::max())
 	, exclusive_minimum_(false)
@@ -75,8 +77,9 @@ bool JsonBaseNumber<double>::IsEqual(double left, double right) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-JsonNumber::JsonNumber(JsonValue const &schema, JsonResolverPtr const &resolver)
-	: JsonBaseNumber(schema, resolver) {
+JsonNumber::JsonNumber(JsonValue const &schema, JsonResolverPtr const &resolver,
+                       std::string const &path)
+	: JsonBaseNumber(schema, resolver, path) {
 }
 
 bool JsonNumber::CheckValueType(JsonValue const &json) const {
@@ -84,8 +87,9 @@ bool JsonNumber::CheckValueType(JsonValue const &json) const {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-JsonInteger::JsonInteger(JsonValue const &schema, JsonResolverPtr const &resolver)
-	: JsonBaseNumber(schema, resolver) {
+JsonInteger::JsonInteger(JsonValue const &schema, JsonResolverPtr const &resolver,
+                         std::string const &path)
+	: JsonBaseNumber(schema, resolver, path) {
 }
 
 bool JsonInteger::CheckValueType(JsonValue const &json) const {
@@ -93,8 +97,9 @@ bool JsonInteger::CheckValueType(JsonValue const &json) const {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-JsonBoolean::JsonBoolean(JsonValue const &schema, JsonResolverPtr const &resolver)
-	: JsonTypeImpl(schema, resolver) {
+JsonBoolean::JsonBoolean(JsonValue const &schema, JsonResolverPtr const &resolver,
+                         std::string const &path)
+	: JsonTypeImpl(schema, resolver, path) {
 }
 
 bool JsonBoolean::CheckValueType(JsonValue const &json) const {
@@ -106,8 +111,9 @@ void JsonBoolean::CheckTypeRestrictions(JsonValue const &/*json*/,
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-JsonNull::JsonNull(JsonValue const &schema, JsonResolverPtr const &resolver)
-	: JsonTypeImpl(schema, resolver) {
+JsonNull::JsonNull(JsonValue const &schema, JsonResolverPtr const &resolver,
+                   std::string const &path)
+	: JsonTypeImpl(schema, resolver, path) {
 }
 
 bool JsonNull::CheckValueType(JsonValue const &json) const {
@@ -119,8 +125,9 @@ void JsonNull::CheckTypeRestrictions(JsonValue const &/*json*/,
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-JsonObject::JsonObject(JsonValue const &schema, JsonResolverPtr const &resolver)
-	: JsonTypeImpl(schema, resolver)
+JsonObject::JsonObject(JsonValue const &schema, JsonResolverPtr const &resolver,
+                       std::string const &path)
+	: JsonTypeImpl(schema, resolver, path)
 	, properties_()
 	, pattern_properties_()
 	, may_contains_additional_properties_()
@@ -129,23 +136,24 @@ JsonObject::JsonObject(JsonValue const &schema, JsonResolverPtr const &resolver)
 	, schema_dependencies_() {
 
 	for (auto const &member : GetMembers(schema, "properties")) {
-		properties_.insert({ GetValue<char const *>(member.name), JsonType::Create(member.value, resolver) });
+		properties_.insert({ GetValue<char const *>(member.name),
+		                     CreateMember(member, resolver) });
 	}
 
 	for (auto const &member : GetMembers(schema, "patternProperties")) {
-		RegexPtr pattern = Regex::Create(GetValue<char const *>(member.name));
-		pattern_properties_.push_back({ pattern, JsonType::Create(member.value, resolver) });
+		pattern_properties_.push_back({ Regex::Create(GetValue<char const *>(member.name)),
+		                                CreateMember(member, resolver) });
 	}
 
 	GetChildValue(schema, "additionalProperties", may_contains_additional_properties_);
 	if (!may_contains_additional_properties_.exists) {
-		GetChildValue(schema, "additionalProperties", additional_properties_, resolver);
+		GetChildValue(schema, "additionalProperties", additional_properties_, resolver, path);
 	}
 
 	for (auto const &member : GetMembers(schema, "dependencies")) {
 		if (member.value.IsObject()) {
 			schema_dependencies_.insert({ GetValue<char const *>(member.name),
-			                              JsonType::Create(member.value, resolver) });
+			                              CreateMember(member, resolver) });
 		}
 		else if (member.value.IsArray()) {
 			std::set<char const *, StrLess> strings;
@@ -232,9 +240,16 @@ void JsonObject::CheckTypeRestrictions(JsonValue const &json, ValidationResult &
 	}
 }
 
+JsonTypePtr JsonObject::CreateMember(JsonValueMember const &member,
+                                     JsonResolverPtr const &resolver) const {
+	return JsonType::Create(member.value, resolver,
+	                        MemberPath(GetValue<char const *>(member.name)));
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-JsonArray::JsonArray(JsonValue const &schema, JsonResolverPtr const &resolver)
-	: JsonTypeImpl(schema, resolver)
+JsonArray::JsonArray(JsonValue const &schema, JsonResolverPtr const &resolver,
+                     std::string const &path)
+	: JsonTypeImpl(schema, resolver, path)
 	, min_items_(0)
 	, max_items_(std::numeric_limits<size_t>::max())
 	, unique_items_(false)
@@ -248,12 +263,12 @@ JsonArray::JsonArray(JsonValue const &schema, JsonResolverPtr const &resolver)
 
 	GetChildValue(schema, "uniqueItems", unique_items_);
 
-	GetChildValue(schema, "items", items_, resolver);
-	GetChildValue(schema, "items", items_array_, resolver);
+	GetChildValue(schema, "items", items_, resolver, path);
+	GetChildValue(schema, "items", items_array_, resolver, path);
 
 	GetChildValue(schema, "additionalItems", may_contains_additional_items_);
 	if (!may_contains_additional_items_.exists) {
-		GetChildValue(schema, "additionalItems", additional_items_, resolver);
+		GetChildValue(schema, "additionalItems", additional_items_, resolver, path);
 	}
 }
 

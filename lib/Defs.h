@@ -13,7 +13,8 @@ class ValidationResult;
 class JsonType;
 typedef std::shared_ptr<JsonType> JsonTypePtr;
 
-typedef std::function<JsonTypePtr(JsonValue const&, JsonResolverPtr const &)> JsonTypeCreator;
+typedef std::function<JsonTypePtr(JsonValue const&, JsonResolverPtr const &,
+                                  std::string const &path)> JsonTypeCreator;
 
 class Regex;
 typedef std::shared_ptr<Regex> RegexPtr;

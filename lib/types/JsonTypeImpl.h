@@ -14,7 +14,8 @@ namespace JsonSchemaValidator {
 template <typename Type>
 class JsonTypeImpl : public JsonType {
 public:
-	JsonTypeImpl(JsonValue const &schema, JsonResolverPtr const &resolver);
+	JsonTypeImpl(JsonValue const &schema, JsonResolverPtr const &resolver,
+	             std::string const &path);
 
 protected:
 	typedef Type ValueType;

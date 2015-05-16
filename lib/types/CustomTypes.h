@@ -15,7 +15,8 @@ namespace JsonSchemaValidator {
 
 class JsonCustomType : public JsonType {
 public:
-	JsonCustomType(JsonValue const &schema, JsonResolverPtr const &resolver);
+	JsonCustomType(JsonValue const &schema, JsonResolverPtr const &resolver,
+	               std::string const &path);
 
 private:
 	virtual bool CheckValueType(JsonValue const &json) const;
@@ -29,7 +30,8 @@ private:
 class JsonAny : public JsonType
 {
 public:
-	JsonAny(JsonValue const &schema, JsonResolverPtr const &resolver);
+	JsonAny(JsonValue const &schema, JsonResolverPtr const &resolver,
+	        std::string const &path);
 
 	virtual void Validate(JsonValue const &json, ValidationResult &result) const;
 
@@ -57,7 +59,8 @@ private:
 class JsonUnionType : public JsonType
 {
 public:
-	JsonUnionType(JsonValue const &schema, JsonResolverPtr const &resolver);
+	JsonUnionType(JsonValue const &schema, JsonResolverPtr const &resolver,
+	              std::string const &path);
 
 	virtual void Validate(JsonValue const &json, ValidationResult &result) const;
 

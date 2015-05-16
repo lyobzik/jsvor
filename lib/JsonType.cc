@@ -18,16 +18,18 @@ namespace JsonSchemaValidator {
 namespace {
 
 template <typename Type>
-JsonTypePtr MakeJsonType(JsonValue const &schema, JsonResolverPtr const &resolver) {
-	return std::make_shared<Type>(schema, resolver);
+JsonTypePtr MakeJsonType(JsonValue const &schema, JsonResolverPtr const &resolver,
+                         std::string const &path) {
+	return std::make_shared<Type>(schema, resolver, path);
 }
 
 } // namespace
 
-JsonType::JsonType(JsonValue const &schema, JsonResolverPtr const &resolver)
+JsonType::JsonType(JsonValue const &schema, JsonResolverPtr const &resolver,
+                   std::string const &path)
 	: required_(false)
 	, id_()
-	, json_path_()
+	, path_(path)
 	, resolver_(resolver)
 	, extends_()
 	, ref_() {
@@ -35,12 +37,11 @@ JsonType::JsonType(JsonValue const &schema, JsonResolverPtr const &resolver)
 	//TODO: Check $schema.
 	GetChildValue(schema, "id", id_);
 	GetChildValue(schema, "$ref", ref_);
-	//TODO: How to detect json_path?
 	GetChildValue(schema, "required", required_);
 
-	if (!GetChildValue(schema, "extends", extends_, resolver_)) {
+	if (!GetChildValue(schema, "extends", extends_, resolver_, path_)) {
 		JsonTypePtr extended_type;
-		if (GetChildValue(schema, "extends", extended_type, resolver_)) {
+		if (GetChildValue(schema, "extends", extended_type, resolver_, path_)) {
 			extends_.push_back(extended_type);
 		}
 	}
@@ -53,7 +54,7 @@ void JsonType::Validate(JsonValue const &json, ValidationResult &result) const {
 	}
 	if (result) {
 		if (!CheckValueType(json)) {
-			result.SetError(DocumentErrors::Type, "", json);
+			result.SetError(DocumentErrors::Type, "", json, path_);
 		}
 	}
 	if (result) {
@@ -84,7 +85,8 @@ void JsonType::ValidateRef(JsonValue const &json, ValidationResult &result) cons
 	}
 }
 
-JsonTypePtr JsonType::Create(JsonValue const &schema, JsonResolverPtr const &resolver) {
+JsonTypePtr JsonType::Create(JsonValue const &schema, JsonResolverPtr const &resolver,
+                             std::string const &path) {
 	if (!schema.IsObject()) {
 		RaiseError(SchemaErrors::NotJsonObject);
 	}
@@ -95,7 +97,11 @@ JsonTypePtr JsonType::Create(JsonValue const &schema, JsonResolverPtr const &res
 		RaiseError(SchemaErrors::CantDetectType);
 	}
 
-	return creator(schema, resolver);
+	return creator(schema, resolver, path);
+}
+
+std::string JsonType::MemberPath(char const *member) const {
+	return (path_ + "/") + member;
 }
 
 JsonTypeCreator JsonType::GetCreator(JsonValue const &type) {
@@ -127,21 +133,22 @@ JsonTypeCreator JsonType::GetCreator(JsonValue const &type) {
 }
 
 JsonTypePtr JsonType::CreateJsonTypeFromArrayElement(JsonValue const &schema,
-	                                                 JsonResolverPtr const &resolver) {
+	                                                 JsonResolverPtr const &resolver,
+                                                     std::string const &path) {
 	if (schema.IsObject()) {
-		return JsonType::Create(schema, resolver);
+		return JsonType::Create(schema, resolver, path);
 	}
 	if (schema.IsString()) {
 		JsonTypeCreator creator = GetCreator(schema);
-		return creator((JsonValue()), resolver);
+		return creator((JsonValue()), resolver, path);
 	}
 	RaiseError(SchemaErrors::IncorrectType);
 	return JsonTypePtr();
 }
 
 void JsonType::RaiseError(DocumentErrors error, std::string const &requirements,
-                          JsonValue const &json, ValidationResult &result) {
-	result.SetError(error, requirements, json);
+                          JsonValue const &json, ValidationResult &result) const {
+	result.SetError(error, requirements, json, path_);
 }
 
 void JsonType::RaiseError(SchemaErrors error) {
@@ -149,19 +156,20 @@ void JsonType::RaiseError(SchemaErrors error) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-bool GetValue(JsonValue const &json, JsonTypePtr &value, JsonResolverPtr const &resolver) {
+bool GetValue(JsonValue const &json, JsonTypePtr &value, JsonResolverPtr const &resolver,
+              std::string const &path) {
 	if (json.IsObject()) {
-		value = JsonType::Create(json, resolver);
+		value = JsonType::Create(json, resolver, path);
 		return true;
 	}
 	return false;
 }
 
 bool GetValue(JsonValue const &json, std::vector<JsonTypePtr> &value,
-              JsonResolverPtr const &resolver) {
+              JsonResolverPtr const &resolver, std::string const &path) {
 	if (json.IsArray()) {
 		for (JsonSizeType i = 0; i < json.Size(); ++i) {
-			value.push_back(JsonType::Create(json[i], resolver));
+			value.push_back(JsonType::Create(json[i], resolver, path));
 		}
 		return true;
 	}

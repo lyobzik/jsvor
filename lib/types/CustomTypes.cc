@@ -9,15 +9,16 @@
 
 namespace JsonSchemaValidator {
 
-JsonCustomType::JsonCustomType(JsonValue const &schema, JsonResolverPtr const &resolver)
-	: JsonType(schema, resolver)
+JsonCustomType::JsonCustomType(JsonValue const &schema, JsonResolverPtr const &resolver,
+                               std::string const &path)
+	: JsonType(schema, resolver, path)
 	, custom_type_() {
 
 	JsonValueMember const *type = FindMember(schema, "type");
 	if (!type) {
 		RaiseError(SchemaErrors::IncorrectCustomType);
 	}
-	custom_type_ = JsonType::Create(type->value, resolver);
+	custom_type_ = JsonType::Create(type->value, resolver, path);
 }
 
 bool JsonCustomType::CheckValueType(JsonValue const &/*json*/) const {
@@ -33,27 +34,30 @@ void JsonCustomType::CheckEnumsRestrictions(JsonValue const &/*json*/,
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-JsonAny::JsonAny(JsonValue const &schema, JsonResolverPtr const &resolver)
-	: JsonType(schema, resolver)
+JsonAny::JsonAny(JsonValue const &schema, JsonResolverPtr const &resolver,
+                 std::string const &path)
+	: JsonType(schema, resolver, path)
 	, disallow_()
-	, string_(std::make_shared<JsonString>(schema, resolver))
-	, number_(std::make_shared<JsonNumber>(schema, resolver))
-	, integer_(std::make_shared<JsonInteger>(schema, resolver))
-	, boolean_(std::make_shared<JsonBoolean>(schema, resolver))
-	, object_(std::make_shared<JsonObject>(schema, resolver))
-	, array_(std::make_shared<JsonArray>(schema, resolver))
-	, null_(std::make_shared<JsonNull>(schema, resolver)) {
+	, string_(std::make_shared<JsonString>(schema, resolver, path))
+	, number_(std::make_shared<JsonNumber>(schema, resolver, path))
+	, integer_(std::make_shared<JsonInteger>(schema, resolver, path))
+	, boolean_(std::make_shared<JsonBoolean>(schema, resolver, path))
+	, object_(std::make_shared<JsonObject>(schema, resolver, path))
+	, array_(std::make_shared<JsonArray>(schema, resolver, path))
+	, null_(std::make_shared<JsonNull>(schema, resolver, path)) {
 
 	JsonValueMember const *disallow = FindMember(schema, "disallow");
 	if (disallow) {
 		if (disallow->value.IsArray()) {
 			for (JsonSizeType i = 0; i < disallow->value.Size(); ++i) {
-				JsonTypePtr json_type = CreateJsonTypeFromArrayElement(disallow->value[i], resolver);
+				JsonTypePtr json_type = CreateJsonTypeFromArrayElement(disallow->value[i],
+				                                                       resolver, path);
 				disallow_.insert(json_type);
 			}
 		}
 		else if (disallow->value.IsObject() || disallow->value.IsString()) {
-			JsonTypePtr json_type = CreateJsonTypeFromArrayElement(disallow->value, resolver);
+			JsonTypePtr json_type = CreateJsonTypeFromArrayElement(disallow->value,
+			                                                       resolver, path);
 			disallow_.insert(json_type);
 		}
 		else {
@@ -95,8 +99,9 @@ JsonTypePtr const &JsonAny::GetSchema(JsonValue const &json) const {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-JsonUnionType::JsonUnionType(JsonValue const &schema, JsonResolverPtr const &resolver)
-	: JsonType(schema, resolver)
+JsonUnionType::JsonUnionType(JsonValue const &schema, JsonResolverPtr const &resolver,
+                             std::string const &path)
+	: JsonType(schema, resolver, path)
 	, type_() {
 
 	JsonValueMember const *type = FindMember(schema, "type");
@@ -105,13 +110,13 @@ JsonUnionType::JsonUnionType(JsonValue const &schema, JsonResolverPtr const &res
 	}
 	if (type->value.IsArray()) {
 		for (JsonSizeType i = 0; i < type->value.Size(); ++i) {
-			JsonTypePtr json_type = CreateJsonTypeFromArrayElement(type->value[i], resolver);
+			JsonTypePtr json_type = CreateJsonTypeFromArrayElement(type->value[i], resolver, path);
 			type_.insert(json_type);
 		}
 	}
 	else if (type->value.IsObject()) {
 		JsonTypeCreator creator = GetCreator(type->value);
-		type_.insert(creator(schema, resolver));
+		type_.insert(creator(schema, resolver, path));
 	}
 }
 

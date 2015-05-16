@@ -30,21 +30,25 @@ bool GetChildValue(JsonValue const &json, char const *child_name,
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class JsonType {
 public:
-	JsonType(JsonValue const &schema, JsonResolverPtr const &resolver);
+	JsonType(JsonValue const &schema, JsonResolverPtr const &resolver, std::string const &path);
 	virtual ~JsonType() { }
 
 	virtual void Validate(JsonValue const &json, ValidationResult &result) const;
 
 	bool IsRequired() const;
 
-	static JsonTypePtr Create(JsonValue const &value, JsonResolverPtr const &resolver);
+	static JsonTypePtr Create(JsonValue const &value, JsonResolverPtr const &resolver,
+	                          std::string const &path);
 
 protected:
-	static void RaiseError(DocumentErrors error, std::string const &requirements,
-	                       JsonValue const &json, ValidationResult &result);
+	std::string MemberPath(char const *member) const;
+
+	void RaiseError(DocumentErrors error, std::string const &requirements,
+	                       JsonValue const &json, ValidationResult &result) const; //TODO
 	static void RaiseError(SchemaErrors error);
 	static JsonTypePtr CreateJsonTypeFromArrayElement(JsonValue const &schema,
-	                                                  JsonResolverPtr const &resolver);
+	                                                  JsonResolverPtr const &resolver,
+	                                                  std::string const &path);
 
 	static JsonTypeCreator GetCreator(JsonValue const &type);
 
@@ -58,7 +62,7 @@ private:
 
 	bool required_;
 	std::string id_;
-	std::string json_path_;
+	std::string path_;
 	JsonResolverPtr resolver_;
 	std::vector<JsonTypePtr> extends_;
 	JsonTypeProperty<std::string> ref_;
@@ -66,9 +70,10 @@ private:
 }; // class JsonType
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-bool GetValue(JsonValue const &json, JsonTypePtr &value, JsonResolverPtr const &resolver);
+bool GetValue(JsonValue const &json, JsonTypePtr &value, JsonResolverPtr const &resolver,
+              std::string const &path);
 
 bool GetValue(JsonValue const &json, std::vector<JsonTypePtr> &value,
-              JsonResolverPtr const &resolver);
+              JsonResolverPtr const &resolver, std::string const &path);
 
 } // namespace JsonSchemaValidator

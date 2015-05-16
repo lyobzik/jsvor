@@ -61,7 +61,7 @@ class ValidationResult {
 public:
 	ValidationResult();
 
-	void SetError(DocumentErrors error, std::string const &requirements, JsonValue const &json);
+	void SetError(DocumentErrors error, std::string const &requirements, JsonValue const &json, std::string const &path);
 
 	DocumentErrors Error() const;
 	char const *ErrorDescription() const;
@@ -76,6 +76,7 @@ private:
 	DocumentErrors error_;
 	std::string requirements_;
 	std::string json_;
+	std::string path_;
 	std::string mutable detailed_;
 }; // class ValidationResult
 
