@@ -16,22 +16,16 @@ void JsonBaseNumber<Type>::CheckTypeRestrictions(JsonValue const &json,
                                                  ValidationResult &result) const {
 	typename Parent::ValueType value = GetValue<typename Parent::ValueType>(json);
 	if ((value < minimum_) || (exclusive_minimum_ && IsEqual(value,  minimum_))) {
-		return this->RaiseError(DocumentErrors::MinimumValue,
-		                        ToString("Must be ", exclusive_minimum_ ? ">" : ">=", minimum_,
-		                                 "."),
-		                        result);
+		return this->template RaiseError<MinimumValueError<Type> >(result, minimum_,
+		                                                           exclusive_minimum_);
 	}
 	if ((maximum_ < value) || (exclusive_maximum_ && IsEqual(maximum_, value))) {
-		return this->RaiseError(DocumentErrors::MaximumValue,
-		                        ToString("Must be ", exclusive_minimum_ ? "<" : "<=", minimum_,
-		                                 "."),
-		                        result);
+		return this->template RaiseError<MaximumValueError<Type> >(result, maximum_,
+		                                                           exclusive_maximum_);
 	}
 
 	if (divisible_by_.exists && !CheckDivisibility(value, divisible_by_.value)) {
-		return this->RaiseError(DocumentErrors::DivisibleValue,
-		                        ToString("Must be divisible by ", divisible_by_.value, "."),
-		                        result);
+		return this->template RaiseError<DivisibleValueError>(result, divisible_by_.value);
 	}
 }
 

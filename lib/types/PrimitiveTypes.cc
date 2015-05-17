@@ -29,20 +29,14 @@ bool JsonString::CheckValueType(JsonValue const &json) const {
 
 void JsonString::CheckTypeRestrictions(JsonValue const &json, ValidationResult &result) const {
 	if (json.GetStringLength() < min_length_) {
-		return RaiseError(DocumentErrors::MinimalLength,
-		                  ToString("Value length must be >=", min_length_, "."),
-		                  result);
+		return RaiseError<MinimalLengthError>(result, min_length_);
 	}
 	if (json.GetStringLength() > max_length_) {
-		return RaiseError(DocumentErrors::MaximalLength,
-		                  ToString("Value length must be <=", max_length_, "."),
-		                  result);
+		return RaiseError<MaximalLengthError>(result, max_length_);
 	}
 
 	if (pattern_ && !pattern_->IsCorrespond(GetValue<char const *>(json))) {
-		return RaiseError(DocumentErrors::Pattern,
-		                  ToString("Must correspond pattern '", pattern_->Pattern(), "."),
-		                  result);
+		return RaiseError<PatternError>(result, pattern_->Pattern());
 	}
 }
 
@@ -200,8 +194,7 @@ void JsonObject::CheckTypeRestrictions(JsonValue const &json, ValidationResult &
 		if (!described_property) {
 			if (may_contains_additional_properties_.exists) {
 				if (!may_contains_additional_properties_.value) {
-					return RaiseError(DocumentErrors::AdditionalProperty,
-					                  "Cannot contains additional property.", result);
+					return RaiseError<AdditionalPropertyError>(result);
 				}
 			}
 			else if (additional_properties_.exists) {
@@ -215,10 +208,7 @@ void JsonObject::CheckTypeRestrictions(JsonValue const &json, ValidationResult &
 			if (simpleArrayDependIt != simple_dependencies_.end()) {
 				for (auto const &depend : simpleArrayDependIt->second) {
 					if (!json.HasMember(depend)) {
-						return RaiseError(DocumentErrors::DependenciesRestrictions,
-						                  ToString("Doesn't satisfy on dependency restriction of "
-						                           "property ", name, "."),
-						                  result);
+						return RaiseError<DependenciesRestrictionsError>(result, name);
 					}
 				}
 			}
@@ -233,9 +223,7 @@ void JsonObject::CheckTypeRestrictions(JsonValue const &json, ValidationResult &
 	}
 	for (auto const &property : properties_) {
 		if (property.second->IsRequired() && !json.HasMember(property.first)) {
-			return RaiseError(DocumentErrors::RequiredProperty,
-			                  ToString("Must contain property '", property.first, "'."),
-			                  result);
+			return RaiseError<RequiredPropertyError>(result, property.first);
 		}
 	}
 }
@@ -278,24 +266,17 @@ bool JsonArray::CheckValueType(JsonValue const &json) const {
 
 void JsonArray::CheckTypeRestrictions(JsonValue const &json, ValidationResult &result) const {
 	if (json.Size() < min_items_) {
-		return RaiseError(DocumentErrors::MinimalItemsCount,
-		                  ToString("Array must contain >=", min_items_, " items."),
-		                  result);
+		return RaiseError<MinimalItemsCountError>(result, min_items_);
 	}
 	if (json.Size() > max_items_) {
-		return RaiseError(DocumentErrors::MaximalItemsCount,
-		                  ToString("Array must contain <=", max_items_, " items."),
-		                  result);
+		return RaiseError<MaximalItemsCountError>(result, max_items_);
 	}
 
 	if (unique_items_) {
 		for (rapidjson::SizeType i = 0; i < json.Size() - 1; ++i) {
 			for (rapidjson::SizeType j = i + 1; j < json.Size(); ++j) {
 				if (IsEqual(json[i], json[j])) {
-					return RaiseError(DocumentErrors::UniqueItems,
-					                  ToString("Must not contain equal items ",
-					                           ToString(json[i]), " and ", ToString(json[j]), "."),
-					                  result);
+					return RaiseError<UniqueItemsError>(result);
 				}
 			}
 		}
@@ -316,8 +297,7 @@ void JsonArray::CheckTypeRestrictions(JsonValue const &json, ValidationResult &r
 		if (i < json.Size()) {
 			if (may_contains_additional_items_.exists) {
 				if (!may_contains_additional_items_.value) {
-					return RaiseError(DocumentErrors::AdditionalItems,
-					                  "Cannot be additional item of array.", result);
+					return RaiseError<AdditionalItemsError>(result);
 				}
 			}
 			else if (additional_items_.exists) {

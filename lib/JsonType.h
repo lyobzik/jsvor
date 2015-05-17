@@ -43,8 +43,10 @@ public:
 protected:
 	std::string MemberPath(char const *member) const;
 
-	void RaiseError(DocumentErrors error, std::string const &requirements,
-	                ValidationResult &result) const;
+	template <typename DocumentErrorType, typename... Args>
+	void RaiseError(ValidationResult &result, Args&&... args) const {
+		result.SetError<DocumentErrorType>(path_, args...);
+	}
 	static void RaiseError(SchemaErrors error);
 	static JsonTypePtr CreateJsonTypeFromArrayElement(JsonValue const &schema,
 	                                                  JsonResolverPtr const &resolver,

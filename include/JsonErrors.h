@@ -4,39 +4,191 @@
 #include <exception>
 
 #include "../include/JsonDefs.h"
+#include "../lib/RapidJsonHelpers.h"
 
 namespace JsonSchemaValidator {
 
 // Errors that may occur in json-document validation.
-enum class DocumentErrors {
-	None,
+class DocumentError {
+public:
+	DocumentError(std::string const &path);
+	virtual ~DocumentError();
 
-	EnumValue,
+	virtual std::string GetDescription() const = 0;
 
-	MinimalLength,
-	MaximalLength,
-	Pattern,
+protected:
+	std::string path_;
+}; // class DocumentError
 
-	MinimumValue,
-	MaximumValue,
-	DivisibleValue,
+class EnumValueError : public DocumentError {
+public:
+	EnumValueError(std::string const &path);
+	virtual ~EnumValueError();
 
-	AdditionalProperty,
-	DependenciesRestrictions,
-	RequiredProperty,
+	virtual std::string GetDescription() const;
+}; // class EnumValueError : public DocumentError
 
-	MinimalItemsCount,
-	MaximalItemsCount,
-	UniqueItems,
-	AdditionalItems,
+class MinimalLengthError : public DocumentError {
+public:
+	MinimalLengthError(std::string const &path, size_t limit);
 
-	DisallowType,
-	NeitherType,
-	Type,
+	virtual std::string GetDescription() const;
 
-	Unknown
-}; // enum class DocumentErrors
+private:
+	size_t limit_;
+}; // class MinimalLengthError : public DocumentError
 
+class MaximalLengthError : public DocumentError {
+public:
+	MaximalLengthError(std::string const &path, size_t limit);
+
+	virtual std::string GetDescription() const;
+
+private:
+	size_t limit_;
+}; // class MaximalLengthError : public DocumentError
+
+class PatternError : public DocumentError {
+public:
+	PatternError(std::string const &path, std::string const &pattern);
+
+	virtual std::string GetDescription() const;
+
+private:
+	std::string pattern_;
+}; // class PatternError : public DocumentError
+
+template<typename Type>
+class MinimumValueError : public DocumentError {
+public:
+	MinimumValueError(std::string const &path, Type const &limit, bool exclusive)
+		: DocumentError(path)
+		, limit_(limit)
+		, exclusive_(exclusive) {
+	}
+
+	virtual std::string GetDescription() const {
+		return ToString("Attribute ", path_, " must be ", exclusive_ ? ">" : ">=", limit_, ".");
+	}
+
+private:
+	Type limit_;
+	bool exclusive_;
+}; // class MinimumValueError : public DocumentError
+
+template<typename Type>
+class MaximumValueError : public DocumentError {
+public:
+	MaximumValueError(std::string const &path, Type const &limit, bool exclusive)
+		: DocumentError(path)
+		, limit_(limit)
+		, exclusive_(exclusive) {
+	}
+
+	virtual std::string GetDescription() const {
+		return ToString("Attribute ", path_, " must be ", exclusive_ ? "<" : "<=", limit_, ".");
+	}
+
+private:
+	Type limit_;
+	bool exclusive_;
+}; // class MaximumValueError : public DocumentError
+
+class DivisibleValueError : public DocumentError {
+public:
+	DivisibleValueError(std::string const &path, double divisible_by);
+
+	virtual std::string GetDescription() const;
+
+private:
+	double divisible_by_;
+}; // class DivisibleValueError : public DocumentError
+
+class AdditionalPropertyError : public DocumentError {
+public:
+	AdditionalPropertyError(std::string const &path);
+
+	virtual std::string GetDescription() const;
+}; // class AdditionalPropertyError : public DocumentError
+
+class DependenciesRestrictionsError : public DocumentError {
+public:
+	DependenciesRestrictionsError(std::string const &path, std::string const &name);
+
+	virtual std::string GetDescription() const;
+
+private:
+	std::string name_;
+}; // class DependenciesRestrictionsError : public DocumentError
+
+class RequiredPropertyError : public DocumentError {
+public:
+	RequiredPropertyError(std::string const &path, std::string const &property);
+
+	virtual std::string GetDescription() const;
+
+private:
+	std::string property_;
+}; // class RequiredPropertyError : public DocumentError
+
+class MinimalItemsCountError : public DocumentError {
+public:
+	MinimalItemsCountError(std::string const &path, size_t limit);
+
+	virtual std::string GetDescription() const;
+
+private:
+	size_t limit_;
+}; // class MinimalItemsCountError : public DocumentError
+
+class MaximalItemsCountError : public DocumentError {
+public:
+	MaximalItemsCountError(std::string const &path, size_t limit);
+
+	virtual std::string GetDescription() const;
+
+private:
+	size_t limit_;
+}; // class MaximalItemsCountError : public DocumentError
+
+class UniqueItemsError : public DocumentError {
+public:
+	UniqueItemsError(std::string const &path);
+
+	virtual std::string GetDescription() const;
+}; // class UniqueItemsError : public DocumentError
+
+class AdditionalItemsError : public DocumentError {
+public:
+	AdditionalItemsError(std::string const &path);
+
+	virtual std::string GetDescription() const;
+}; // class AdditionalItemsError : public DocumentError
+
+class DisallowTypeError : public DocumentError {
+public:
+	DisallowTypeError(std::string const &path);
+
+	virtual std::string GetDescription() const;
+}; // class DisallowTypeError : public DocumentError
+
+class NeitherTypeError : public DocumentError {
+public:
+	NeitherTypeError(std::string const &path);
+
+	virtual std::string GetDescription() const;
+}; // class NeitherTypeError : public DocumentError
+
+class TypeError : public DocumentError {
+public:
+	TypeError(std::string const &path);
+
+	virtual std::string GetDescription() const;
+}; // class TypeError : public DocumentError
+
+typedef std::unique_ptr<DocumentError> DocumentErrorPtr;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 // Errors that may occur in parsing of json-schema.
 enum class SchemaErrors {
 	None,
@@ -61,21 +213,17 @@ class ValidationResult {
 public:
 	ValidationResult();
 
-	void SetError(DocumentErrors error, std::string const &description, std::string const &path);
+	template<typename DocumentErrorType, typename... Args>
+	void SetError(Args&&... args) {
+		error_.reset(new DocumentErrorType(std::forward<Args>(args)...));
+	}
 
-	DocumentErrors Error() const;
-	char const *ErrorDescription() const;
-	char const *Description() const;
-
-	char const *DetailedErrorDescription() const;
+	std::string ErrorDescription() const;
 
 	operator bool() const;
 
 private:
-	DocumentErrors error_;
-	std::string description_;
-	std::string path_;
-	std::string mutable detailed_;
+	DocumentErrorPtr error_;
 }; // class ValidationResult
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -120,7 +268,8 @@ private:
 // Error of validating json-document.
 class IncorrectDocument : public Error {
 public:
-	explicit IncorrectDocument(ValidationResult const &result);
+	explicit IncorrectDocument(ValidationResult &&result);
+	IncorrectDocument(IncorrectDocument &&incorrect_document) = default;
 
 	virtual ~IncorrectDocument() throw() { }
 
@@ -129,7 +278,11 @@ public:
 	ValidationResult const& GetResult() const;
 
 private:
+	IncorrectDocument(IncorrectDocument const &) = delete;
+	IncorrectDocument& operator=(IncorrectDocument const &) = delete;
+
 	ValidationResult result_;
+	mutable std::string error_description_;
 }; // class IncorrectDocument : public Error
 
 } // namespace JsonSchemaValidator

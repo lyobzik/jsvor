@@ -147,7 +147,6 @@ std::string ToString(JsonValue const &value) {
 	Writer<GenericStringBuffer<UTF8<> > > writer(buffer);
 	value.Accept(writer);
 
-	std::string string = buffer.GetString();
 	return buffer.GetString();
 }
 

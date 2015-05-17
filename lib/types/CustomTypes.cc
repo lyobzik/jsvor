@@ -71,8 +71,7 @@ void JsonAny::Validate(JsonValue const &json, ValidationResult &result) const {
 		ValidationResult disallow_result;
 		disallow->Validate(json, disallow_result);
 		if (disallow_result) {
-			return RaiseError(DocumentErrors::DisallowType,
-			                  "Satisfies one of disallow type.", result);
+			return RaiseError<DisallowTypeError>(result);
 		}
 	}
 	GetSchema(json)->Validate(json, result);
@@ -128,8 +127,7 @@ void JsonUnionType::Validate(JsonValue const &json, ValidationResult &result) co
 			return;
 		}
 	}
-	return RaiseError(DocumentErrors::NeitherType,
-	                  "Doesn't satisfy any allow type.", result);
+	return RaiseError<NeitherTypeError>(result); // TODO: Specify all child errors.
 }
 
 bool JsonUnionType::CheckValueType(JsonValue const &/*json*/) const {

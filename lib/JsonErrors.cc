@@ -4,86 +4,157 @@
 
 namespace JsonSchemaValidator {
 
+DocumentError::DocumentError(std::string const &path)
+	: path_(path) {
+}
+
+DocumentError::~DocumentError() {
+}
+
+EnumValueError::EnumValueError(std::string const &path)
+	: DocumentError(path) {
+}
+
+EnumValueError::~EnumValueError() {
+}
+
+std::string EnumValueError::GetDescription() const {
+	return path_.c_str();
+}
+
+MinimalLengthError::MinimalLengthError(std::string const &path, size_t limit)
+	: DocumentError(path)
+	, limit_(limit) {
+}
+
+std::string MinimalLengthError::GetDescription() const {
+	return ToString("Value length of attribute ", path_, " must be >= ", limit_, ".");
+}
+
+MaximalLengthError::MaximalLengthError(std::string const &path, size_t limit)
+	: DocumentError(path)
+	, limit_(limit) {
+}
+
+std::string MaximalLengthError::GetDescription() const {
+	return ToString("Value length of attribute ", path_, " must be <= ", limit_, ".");
+}
+
+PatternError::PatternError(std::string const &path, std::string const &pattern)
+	: DocumentError(path)
+	, pattern_(pattern) {
+}
+
+std::string PatternError::GetDescription() const {
+	return ToString("Attribute ", path_, " must pattern '", pattern_, "'.");
+}
+
+DivisibleValueError::DivisibleValueError(std::string const &path, double divisible_by)
+	: DocumentError(path)
+	, divisible_by_(divisible_by) {
+}
+
+std::string DivisibleValueError::GetDescription() const {
+	return ToString("Attribute ", path_, " must be divisible by ", divisible_by_, ".");
+}
+
+AdditionalPropertyError::AdditionalPropertyError(std::string const &path)
+	: DocumentError(path) {
+}
+
+std::string AdditionalPropertyError::GetDescription() const {
+	return ToString("Attribute ", path_, " cannot contain additional property.");
+}
+
+DependenciesRestrictionsError::DependenciesRestrictionsError(std::string const &path,
+                                                             std::string const &name)
+	: DocumentError(path)
+	, name_(name){
+}
+
+std::string DependenciesRestrictionsError::GetDescription() const {
+	return ToString("Attribute ", path_, " doesn't satisfy dependency restriction of "
+	                "property ", name_, ".");
+}
+
+RequiredPropertyError::RequiredPropertyError(std::string const &path, std::string const &property)
+	: DocumentError(path)
+	, property_(property){
+}
+
+std::string RequiredPropertyError::GetDescription() const {
+	return ToString("Attribute ", path_, " must contain property '", property_, "'.");
+}
+
+MinimalItemsCountError::MinimalItemsCountError(std::string const &path, size_t limit)
+	: DocumentError(path)
+	, limit_(limit) {
+}
+
+std::string MinimalItemsCountError::GetDescription() const {
+	return ToString("Array ", path_, " must contain >= ", limit_, " items.");
+}
+
+MaximalItemsCountError::MaximalItemsCountError(std::string const &path, size_t limit)
+	: DocumentError(path)
+	, limit_(limit) {
+}
+
+std::string MaximalItemsCountError::GetDescription() const {
+	return ToString("Array ", path_, " must contain <= '", limit_, " items.");
+}
+
+UniqueItemsError::UniqueItemsError(std::string const &path)
+	: DocumentError(path) {
+}
+
+std::string UniqueItemsError::GetDescription() const {
+	return ToString("Array ", path_, " cannot contain equal items.");
+}
+
+AdditionalItemsError::AdditionalItemsError(std::string const &path)
+	: DocumentError(path) {
+}
+
+std::string AdditionalItemsError::GetDescription() const {
+	return ToString("Array ", path_, " cannot contain additional items.");
+}
+
+DisallowTypeError::DisallowTypeError(std::string const &path)
+	: DocumentError(path) {
+}
+
+std::string DisallowTypeError::GetDescription() const {
+	return ToString("Attribute ", path_, " satisfies one of disallowed types.");
+}
+
+NeitherTypeError::NeitherTypeError(std::string const &path)
+	: DocumentError(path) {
+}
+
+std::string NeitherTypeError::GetDescription() const {
+	return ToString("Attribute ", path_, " doesn't satisfy any allow type.");
+}
+
+TypeError::TypeError(std::string const &path)
+	: DocumentError(path) {
+}
+
+std::string TypeError::GetDescription() const {
+	return ToString("Attribute ", path_, " has incorrect type.");
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 ValidationResult::ValidationResult()
-	: error_(DocumentErrors::None)
-	, description_()
-	, path_()
-	, detailed_() {
+	: error_() {
 }
 
-void ValidationResult::SetError(DocumentErrors error, std::string const &description,
-                                std::string const &path) {
-	error_ = error;
-	description_ = description;
-	path_ = path;
-}
-
-DocumentErrors ValidationResult::Error() const {
-	return error_;
-}
-
-char const *ValidationResult::ErrorDescription() const {
-	switch (error_) {
-	case DocumentErrors::None:
-		return "None";
-
-	case DocumentErrors::EnumValue:
-		return "Inspected document not satisfied restriction on value enum.";
-
-	case DocumentErrors::MinimalLength:
-		return "Inspected document not satisfied restriction on minimal length.";
-	case DocumentErrors::MaximalLength:
-		return "Inspected document not satisfied restriction on maximal length.";
-	case DocumentErrors::Pattern:
-		return "Inspected document not satisfied restriction on pattern.";
-
-	case DocumentErrors::MinimumValue:
-		return "Inspected document not satisfied restriction on minimum.";
-	case DocumentErrors::MaximumValue:
-		return "Inspected document not satisfied restriction on maximum.";
-	case DocumentErrors::DivisibleValue:
-		return "Inspected document not satisfied restriction on divisible.";
-
-	case DocumentErrors::AdditionalProperty:
-		return "Inspected document not satisfied restriction on additional property.";
-	case DocumentErrors::DependenciesRestrictions:
-		return "Inspected document not satisfied restriction on dependencies.";
-	case DocumentErrors::RequiredProperty:
-		return "Inspected document not satisfied restriction on required property.";
-
-	case DocumentErrors::MinimalItemsCount:
-		return "Inspected document not satisfied restriction on minimal items count.";
-	case DocumentErrors::MaximalItemsCount:
-		return "Inspected document not satisfied restriction on maximal items count.";
-	case DocumentErrors::UniqueItems:
-		return "Inspected document not satisfied restriction on unique items.";
-	case DocumentErrors::AdditionalItems:
-		return "Inspected document not satisfied restriction on additional items.";
-
-	case DocumentErrors::DisallowType:
-		return "Inspected document not satisfied disallow type.";
-	case DocumentErrors::NeitherType:
-		return "Inspected document not satisfied neither type.";
-	case DocumentErrors::Type:
-		return "Inspected document not satisfied restriction on type.";
-
-	case DocumentErrors::Unknown:
-		return "Unknown error";
-	}
-	return "Unknown error";
-}
-
-char const *ValidationResult::Description() const {
-	return description_.c_str();
-}
-
-char const *ValidationResult::DetailedErrorDescription() const {
-	detailed_ = ToString(ErrorDescription(), " ", Description(), " at ", path_);
-	return detailed_.c_str();
+std::string ValidationResult::ErrorDescription() const {
+	return error_ ? error_->GetDescription() : std::string();
 }
 
 ValidationResult::operator bool() const {
-	return error_ == DocumentErrors::None;
+	return !error_;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -118,13 +189,15 @@ char const *IncorrectSchema::what() const throw() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-IncorrectDocument::IncorrectDocument(ValidationResult const &result)
-: Error()
-, result_(result) {
+IncorrectDocument::IncorrectDocument(ValidationResult &&result)
+	: Error()
+	, result_(std::move(result))
+	, error_description_() {
 }
 
 char const *IncorrectDocument::what() const throw() {
-	return result_.DetailedErrorDescription();
+	error_description_ = result_.ErrorDescription();
+	return error_description_.c_str();
 }
 
 ValidationResult const& IncorrectDocument::GetResult() const {

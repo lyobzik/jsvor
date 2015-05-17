@@ -23,7 +23,7 @@ void Validate(JsonSchema const &schema, Document const &document) {
 	ValidationResult result;
 	schema.Validate(document, result);
 	if (!result) {
-		throw IncorrectDocument(result);
+		throw IncorrectDocument(std::move(result));
 	}
 }
 
