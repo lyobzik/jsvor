@@ -19,7 +19,8 @@ EnumValueError::~EnumValueError() {
 }
 
 std::string EnumValueError::GetDescription() const {
-	return path_.c_str();
+	return ToString("Attribute ", path_, " doesn't satisfy restriction on enumeration "
+	                "of all possible values");
 }
 
 MinimalLengthError::MinimalLengthError(std::string const &path, size_t limit)
