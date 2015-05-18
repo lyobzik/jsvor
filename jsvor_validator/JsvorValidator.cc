@@ -70,12 +70,20 @@ std::string LoadFileContent(const std::string& file_path) {
 	                   std::istreambuf_iterator<char>());
 }
 
+std::string GetFileName(const std::string& file_path) {
+	std::string::size_type last_slash = file_path.find_last_of("/\\");
+	if (last_slash != std::string::npos) {
+		return file_path.substr(last_slash + 1);
+	}
+	return file_path;
+}
+
 jsvor::JsonSchemaPtr LoadSchema(const std::string& schema_path,
                                 const SimpleResolverPtr& resolver) {
 	const std::string content = LoadFileContent(schema_path);
 	try {
 		auto schema = std::make_shared<jsvor::JsonSchema>(content, resolver);
-		resolver->AddSchema(schema_path, schema);
+		resolver->AddSchema(GetFileName(schema_path), schema);
 		return schema;
 	}
 	catch (const jsvor::Error& ex) {
