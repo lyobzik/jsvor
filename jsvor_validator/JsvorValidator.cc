@@ -19,12 +19,12 @@ public:
 	: schemas_() {
 	}
 
-	virtual jsvor::JsonSchemaPtr Resolve(const std::string& ref) const {
+	virtual jsvor::JsonSchemaPtr Resolve(const std::string &ref) const {
 		auto it = schemas_.find(ref);
 		return it != schemas_.end() ? it->second : jsvor::JsonSchemaPtr();
 	}
 
-	void AddSchema(const std::string& schema_path, const jsvor::JsonSchemaPtr& schema) {
+	void AddSchema(const std::string &schema_path, const jsvor::JsonSchemaPtr &schema) {
 		schemas_.insert({schema_path, schema});
 	}
 
@@ -37,12 +37,12 @@ typedef std::shared_ptr<SimpleResolver> SimpleResolverPtr;
 
 // Show error and help.
 template <typename Value>
-void Show(std::ostream& os, const Value& value) {
+void Show(std::ostream &os, const Value& value) {
 	os << value;
 }
 
 template <typename Value, typename... Values>
-void Show(std::ostream& os, const Value& value, const Values&... values) {
+void Show(std::ostream &os, const Value &value, const Values&... values) {
 	Show(os, value);
 	Show(os, values...);
 }
@@ -61,7 +61,7 @@ void ShowError(const Args&... args) {
 }
 
 // Load files and schemas.
-std::string LoadFileContent(const std::string& file_path) {
+std::string LoadFileContent(const std::string &file_path) {
 	std::ifstream file(file_path.c_str());
 	if (not file.is_open()) {
 		ShowError("Cannot open file ", file_path);
@@ -70,7 +70,7 @@ std::string LoadFileContent(const std::string& file_path) {
 	                   std::istreambuf_iterator<char>());
 }
 
-std::string GetFileName(const std::string& file_path) {
+std::string GetFileName(const std::string &file_path) {
 	std::string::size_type last_slash = file_path.find_last_of("/\\");
 	if (last_slash != std::string::npos) {
 		return file_path.substr(last_slash + 1);
@@ -78,21 +78,21 @@ std::string GetFileName(const std::string& file_path) {
 	return file_path;
 }
 
-jsvor::JsonSchemaPtr LoadSchema(const std::string& schema_path,
-                                const SimpleResolverPtr& resolver) {
+jsvor::JsonSchemaPtr LoadSchema(const std::string &schema_path,
+                                const SimpleResolverPtr &resolver) {
 	const std::string content = LoadFileContent(schema_path);
 	try {
 		auto schema = std::make_shared<jsvor::JsonSchema>(content, resolver);
 		resolver->AddSchema(GetFileName(schema_path), schema);
 		return schema;
 	}
-	catch (const jsvor::Error& ex) {
+	catch (const jsvor::Error &ex) {
 		ShowError("Could not load schema from ", schema_path, ": ", ex.what());
 	}
 	return jsvor::JsonSchemaPtr();
 }
 
-int main(int argc, char * argv[]) {
+int main(int argc, char *argv[]) {
 	// Parse arguments.
 	if (argc < 3) {
 		Usage();
@@ -118,7 +118,7 @@ int main(int argc, char * argv[]) {
 	try {
 		main_schema->Validate(json);
 	}
-	catch (const jsvor::IncorrectDocument& error) {
+	catch (const jsvor::IncorrectDocument &error) {
 		ShowError("Incorrect json document: ", error.what());
 	}
 	exit(EXIT_SUCCESS);
