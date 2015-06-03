@@ -118,7 +118,7 @@ void JsonSchema::Initialize(JsonValue const &schema, JsonResolverPtr const &reso
 		impl_->resolver_ = resolver;
 	}
 
-	impl_->root_object_ = JsonType::Create(schema, impl_->resolver_, "");
+	impl_->root_object_ = JsonType::Create(schema, impl_->resolver_, "/");
 }
 
 } // namespace JsonSchemaValidator

@@ -54,7 +54,7 @@ void JsonType::Validate(JsonValue const &json, ValidationResult &result) const {
 	}
 	if (result) {
 		if (!CheckValueType(json)) {
-			RaiseError<TypeError>(result); //Specify required type
+			RaiseError<TypeError>(result); //TODO: Specify required type
 		}
 	}
 	if (result) {
@@ -101,6 +101,9 @@ JsonTypePtr JsonType::Create(JsonValue const &schema, JsonResolverPtr const &res
 }
 
 std::string JsonType::MemberPath(char const *member) const {
+	if (!path_.empty() && path_[path_.size() - 1] == '/') {
+		return path_ + member;
+	}
 	return (path_ + "/") + member;
 }
 
