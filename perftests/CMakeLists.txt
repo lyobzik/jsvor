@@ -22,9 +22,15 @@ find_package(Boost COMPONENTS timer REQUIRED)
 set(LIBS ${LIBS} ${Boost_LIBRARIES})
 
 find_library(WJELEMENT wjelement)
+if (NOT WJELEMENT)
+	return()
+endif(NOT WJELEMENT)
 set(LIBS ${LIBS} ${WJELEMENT})
 
 find_library(WJREADER wjreader)
+if (NOT WJREADER)
+	return()
+endif(NOT WJREADER)
 set(LIBS ${LIBS} ${WJREADER})
 
 set(LIBS ${LIBS} tests_common)
