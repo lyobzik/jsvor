@@ -19,7 +19,7 @@ EnumValueError::~EnumValueError() {
 }
 
 std::string EnumValueError::GetDescription() const {
-	return ToString("Attribute ", path_, " doesn't satisfy restriction on enumeration "
+	return ToString("Element ", path_, " doesn't satisfy restriction on enumeration "
 	                "of all possible values");
 }
 
@@ -29,7 +29,7 @@ MinimalLengthError::MinimalLengthError(std::string const &path, size_t limit)
 }
 
 std::string MinimalLengthError::GetDescription() const {
-	return ToString("Value length of attribute ", path_, " must be >= ", limit_, ".");
+	return ToString("Value length of element ", path_, " must be >= ", limit_, ".");
 }
 
 MaximalLengthError::MaximalLengthError(std::string const &path, size_t limit)
@@ -38,7 +38,7 @@ MaximalLengthError::MaximalLengthError(std::string const &path, size_t limit)
 }
 
 std::string MaximalLengthError::GetDescription() const {
-	return ToString("Value length of attribute ", path_, " must be <= ", limit_, ".");
+	return ToString("Value length of element ", path_, " must be <= ", limit_, ".");
 }
 
 PatternError::PatternError(std::string const &path, std::string const &pattern)
@@ -47,7 +47,7 @@ PatternError::PatternError(std::string const &path, std::string const &pattern)
 }
 
 std::string PatternError::GetDescription() const {
-	return ToString("Attribute ", path_, " must pattern '", pattern_, "'.");
+	return ToString("Element ", path_, " must pattern '", pattern_, "'.");
 }
 
 DivisibleValueError::DivisibleValueError(std::string const &path, double divisible_by)
@@ -56,7 +56,7 @@ DivisibleValueError::DivisibleValueError(std::string const &path, double divisib
 }
 
 std::string DivisibleValueError::GetDescription() const {
-	return ToString("Attribute ", path_, " must be divisible by ", divisible_by_, ".");
+	return ToString("Element ", path_, " must be divisible by ", divisible_by_, ".");
 }
 
 AdditionalPropertyError::AdditionalPropertyError(std::string const &path)
@@ -64,7 +64,7 @@ AdditionalPropertyError::AdditionalPropertyError(std::string const &path)
 }
 
 std::string AdditionalPropertyError::GetDescription() const {
-	return ToString("Attribute ", path_, " cannot contain additional property.");
+	return ToString("Element ", path_, " cannot contain additional property.");
 }
 
 DependenciesRestrictionsError::DependenciesRestrictionsError(std::string const &path,
@@ -74,7 +74,7 @@ DependenciesRestrictionsError::DependenciesRestrictionsError(std::string const &
 }
 
 std::string DependenciesRestrictionsError::GetDescription() const {
-	return ToString("Attribute ", path_, " doesn't satisfy dependency restriction of "
+	return ToString("Element ", path_, " doesn't satisfy dependency restriction of "
 	                "property ", name_, ".");
 }
 
@@ -84,7 +84,7 @@ RequiredPropertyError::RequiredPropertyError(std::string const &path, std::strin
 }
 
 std::string RequiredPropertyError::GetDescription() const {
-	return ToString("Attribute ", path_, " must contain property '", property_, "'.");
+	return ToString("Element ", path_, " must contain property '", property_, "'.");
 }
 
 MinimalItemsCountError::MinimalItemsCountError(std::string const &path, size_t limit)
@@ -126,7 +126,7 @@ DisallowTypeError::DisallowTypeError(std::string const &path)
 }
 
 std::string DisallowTypeError::GetDescription() const {
-	return ToString("Attribute ", path_, " satisfies one of disallowed types.");
+	return ToString("Element ", path_, " satisfies one of disallowed types.");
 }
 
 NeitherTypeError::NeitherTypeError(std::string const &path)
@@ -134,7 +134,7 @@ NeitherTypeError::NeitherTypeError(std::string const &path)
 }
 
 std::string NeitherTypeError::GetDescription() const {
-	return ToString("Attribute ", path_, " doesn't satisfy any allow type.");
+	return ToString("Element ", path_, " doesn't satisfy any allow type.");
 }
 
 TypeError::TypeError(std::string const &path)
@@ -142,7 +142,7 @@ TypeError::TypeError(std::string const &path)
 }
 
 std::string TypeError::GetDescription() const {
-	return ToString("Attribute ", path_, " has incorrect type.");
+	return ToString("Element ", path_, " has incorrect type.");
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
