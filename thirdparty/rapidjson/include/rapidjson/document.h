@@ -1,22 +1,16 @@
-// Copyright (C) 2011 Milo Yip
+// Tencent is pleased to support the open source community by making RapidJSON available.
+// 
+// Copyright (C) 2015 THL A29 Limited, a Tencent company, and Milo Yip. All rights reserved.
 //
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
+// Licensed under the MIT License (the "License"); you may not use this file except
+// in compliance with the License. You may obtain a copy of the License at
 //
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
+// http://opensource.org/licenses/MIT
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-// THE SOFTWARE.
+// Unless required by applicable law or agreed to in writing, software distributed 
+// under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR 
+// CONDITIONS OF ANY KIND, either express or implied. See the License for the 
+// specific language governing permissions and limitations under the License.
 
 #ifndef RAPIDJSON_DOCUMENT_H_
 #define RAPIDJSON_DOCUMENT_H_
@@ -55,6 +49,9 @@ RAPIDJSON_DIAG_OFF(effc++)
 
     \hideinitializer
 */
+#endif // !defined(RAPIDJSON_HAS_STDSTRING)
+
+#if RAPIDJSON_HAS_STDSTRING
 #include <string>
 #endif // RAPIDJSON_HAS_STDSTRING
 
@@ -62,7 +59,11 @@ RAPIDJSON_DIAG_OFF(effc++)
 #include <iterator> // std::iterator, std::random_access_iterator_tag
 #endif
 
-namespace rapidjson {
+#if RAPIDJSON_HAS_CXX11_RVALUE_REFS
+#include <utility> // std::move
+#endif
+
+RAPIDJSON_NAMESPACE_BEGIN
 
 // Forward declaration.
 template <typename Encoding, typename Allocator>
@@ -426,6 +427,7 @@ public:
     typedef typename GenericMemberIterator<true,Encoding,Allocator>::Iterator ConstMemberIterator;  //!< Constant member iterator for iterating in object.
     typedef GenericValue* ValueIterator;            //!< Value iterator for iterating in array.
     typedef const GenericValue* ConstValueIterator; //!< Constant value iterator for iterating in array.
+    typedef GenericValue<Encoding, Allocator> ValueType;    //!< Value type of itself.
 
     //!@name Constructors and destructor.
     //@{
@@ -451,13 +453,17 @@ public:
         \param type Type of the value.
         \note Default content for number is zero.
     */
-    GenericValue(Type type) RAPIDJSON_NOEXCEPT : data_(), flags_() {
+    explicit GenericValue(Type type) RAPIDJSON_NOEXCEPT : data_(), flags_() {
         static const unsigned defaultFlags[7] = {
-            kNullFlag, kFalseFlag, kTrueFlag, kObjectFlag, kArrayFlag, kConstStringFlag,
+            kNullFlag, kFalseFlag, kTrueFlag, kObjectFlag, kArrayFlag, kShortStringFlag,
             kNumberAnyFlag
         };
         RAPIDJSON_ASSERT(type <= kNumberType);
         flags_ = defaultFlags[type];
+
+        // Use ShortString to store empty string.
+        if (type == kStringType)
+            data_.ss.SetLength(0);
     }
 
     //! Explicit copy constructor (with allocator)
@@ -695,8 +701,11 @@ public:
             return StringEqual(rhs);
 
         case kNumberType:
-            if (IsDouble() || rhs.IsDouble())
-                return GetDouble() == rhs.GetDouble(); // May convert one operand from integer to double.
+            if (IsDouble() || rhs.IsDouble()) {
+                double a = GetDouble();     // May convert from integer to double.
+                double b = rhs.GetDouble(); // Ditto
+                return a >= b && a <= b;    // Prevent -Wfloat-equal
+            }
             else
                 return data_.n.u64 == rhs.data_.n.u64;
 
@@ -795,22 +804,32 @@ public:
     //! Check whether the object is empty.
     bool ObjectEmpty() const { RAPIDJSON_ASSERT(IsObject()); return data_.o.size == 0; }
 
-    //! Get the value associated with the name.
-    /*!
+    //! Get a value from an object associated with the name.
+    /*! \pre IsObject() == true
+        \tparam T Either \c Ch or \c const \c Ch (template used for disambiguation with \ref operator[](SizeType))
         \note In version 0.1x, if the member is not found, this function returns a null value. This makes issue 7.
         Since 0.2, if the name is not correct, it will assert.
         If user is unsure whether a member exists, user should use HasMember() first.
         A better approach is to use FindMember().
         \note Linear time complexity.
     */
-    GenericValue& operator[](const Ch* name) {
+    template <typename T>
+    RAPIDJSON_DISABLEIF_RETURN((internal::NotExpr<internal::IsSame<typename internal::RemoveConst<T>::Type, Ch> >),(GenericValue&)) operator[](T* name) {
         GenericValue n(StringRef(name));
         return (*this)[n];
     }
-    const GenericValue& operator[](const Ch* name) const { return const_cast<GenericValue&>(*this)[name]; }
+    template <typename T>
+    RAPIDJSON_DISABLEIF_RETURN((internal::NotExpr<internal::IsSame<typename internal::RemoveConst<T>::Type, Ch> >),(const GenericValue&)) operator[](T* name) const { return const_cast<GenericValue&>(*this)[name]; }
 
-    // This version is faster because it does not need a StrLen(). 
-    // It can also handle string with null character.
+    //! Get a value from an object associated with the name.
+    /*! \pre IsObject() == true
+        \tparam SourceAllocator Allocator of the \c name value
+
+        \note Compared to \ref operator[](T*), this version is faster because it does not need a StrLen().
+        And it can also handle strings with embedded null characters.
+
+        \note Linear time complexity.
+    */
     template <typename SourceAllocator>
     GenericValue& operator[](const GenericValue<Encoding, SourceAllocator>& name) {
         MemberIterator member = FindMember(name);
@@ -824,6 +843,12 @@ public:
     }
     template <typename SourceAllocator>
     const GenericValue& operator[](const GenericValue<Encoding, SourceAllocator>& name) const { return const_cast<GenericValue&>(*this)[name]; }
+
+#if RAPIDJSON_HAS_STDSTRING
+    //! Get a value from an object associated with name (string object).
+    GenericValue& operator[](const std::basic_string<Ch>& name) { return (*this)[GenericValue(StringRef(name))]; }
+    const GenericValue& operator[](const std::basic_string<Ch>& name) const { return (*this)[GenericValue(StringRef(name))]; }
+#endif
 
     //! Const member iterator
     /*! \pre IsObject() == true */
@@ -847,6 +872,18 @@ public:
         \note Linear time complexity.
     */
     bool HasMember(const Ch* name) const { return FindMember(name) != MemberEnd(); }
+
+#if RAPIDJSON_HAS_STDSTRING
+    //! Check whether a member exists in the object with string object.
+    /*!
+        \param name Member name to be searched.
+        \pre IsObject() == true
+        \return Whether a member with that name exists.
+        \note It is better to use FindMember() directly if you need the obtain the value as well.
+        \note Linear time complexity.
+    */
+    bool HasMember(const std::basic_string<Ch>& name) const { return FindMember(name) != MemberEnd(); }
+#endif
 
     //! Check whether a member exists in the object with GenericValue name.
     /*!
@@ -904,6 +941,18 @@ public:
     }
     template <typename SourceAllocator> ConstMemberIterator FindMember(const GenericValue<Encoding, SourceAllocator>& name) const { return const_cast<GenericValue&>(*this).FindMember(name); }
 
+#if RAPIDJSON_HAS_STDSTRING
+    //! Find member by string object name.
+    /*!
+        \param name Member name to be searched.
+        \pre IsObject() == true
+        \return Iterator to member, if it exists.
+            Otherwise returns \ref MemberEnd().
+    */
+    MemberIterator FindMember(const std::basic_string<Ch>& name) { return FindMember(StringRef(name)); }
+    ConstMemberIterator FindMember(const std::basic_string<Ch>& name) const { return FindMember(StringRef(name)); }
+#endif
+
     //! Add a member (name-value pair) to the object.
     /*! \param name A string value as name of member.
         \param value Value of any type.
@@ -934,6 +983,60 @@ public:
         o.members[o.size].value.RawAssign(value);
         o.size++;
         return *this;
+    }
+
+    //! Add a constant string value as member (name-value pair) to the object.
+    /*! \param name A string value as name of member.
+        \param value constant string reference as value of member.
+        \param allocator    Allocator for reallocating memory. It must be the same one as used before. Commonly use GenericDocument::GetAllocator().
+        \return The value itself for fluent API.
+        \pre  IsObject()
+        \note This overload is needed to avoid clashes with the generic primitive type AddMember(GenericValue&,T,Allocator&) overload below.
+        \note Amortized Constant time complexity.
+    */
+    GenericValue& AddMember(GenericValue& name, StringRefType value, Allocator& allocator) {
+        GenericValue v(value);
+        return AddMember(name, v, allocator);
+    }
+
+#if RAPIDJSON_HAS_STDSTRING
+    //! Add a string object as member (name-value pair) to the object.
+    /*! \param name A string value as name of member.
+        \param value constant string reference as value of member.
+        \param allocator    Allocator for reallocating memory. It must be the same one as used before. Commonly use GenericDocument::GetAllocator().
+        \return The value itself for fluent API.
+        \pre  IsObject()
+        \note This overload is needed to avoid clashes with the generic primitive type AddMember(GenericValue&,T,Allocator&) overload below.
+        \note Amortized Constant time complexity.
+    */
+    GenericValue& AddMember(GenericValue& name, std::basic_string<Ch>& value, Allocator& allocator) {
+        GenericValue v(value, allocator);
+        return AddMember(name, v, allocator);
+    }
+#endif
+
+    //! Add any primitive value as member (name-value pair) to the object.
+    /*! \tparam T Either \ref Type, \c int, \c unsigned, \c int64_t, \c uint64_t
+        \param name A string value as name of member.
+        \param value Value of primitive type \c T as value of member
+        \param allocator Allocator for reallocating memory. Commonly use GenericDocument::GetAllocator().
+        \return The value itself for fluent API.
+        \pre  IsObject()
+
+        \note The source type \c T explicitly disallows all pointer types,
+            especially (\c const) \ref Ch*.  This helps avoiding implicitly
+            referencing character strings with insufficient lifetime, use
+            \ref AddMember(StringRefType, GenericValue&, Allocator&) or \ref
+            AddMember(StringRefType, StringRefType, Allocator&).
+            All other pointer types would implicitly convert to \c bool,
+            use an explicit cast instead, if needed.
+        \note Amortized Constant time complexity.
+    */
+    template <typename T>
+    RAPIDJSON_DISABLEIF_RETURN((internal::OrExpr<internal::IsPointer<T>, internal::IsGenericValue<T> >), (GenericValue&))
+    AddMember(GenericValue& name, T value, Allocator& allocator) {
+        GenericValue v(value);
+        return AddMember(name, v, allocator);
     }
 
 #if RAPIDJSON_HAS_CXX11_RVALUE_REFS
@@ -1003,8 +1106,7 @@ public:
     RAPIDJSON_DISABLEIF_RETURN((internal::OrExpr<internal::IsPointer<T>, internal::IsGenericValue<T> >), (GenericValue&))
     AddMember(StringRefType name, T value, Allocator& allocator) {
         GenericValue n(name);
-        GenericValue v(value);
-        return AddMember(n, v, allocator);
+        return AddMember(n, value, allocator);
     }
 
     //! Remove all members in the object.
@@ -1021,13 +1123,19 @@ public:
     //! Remove a member in object by its name.
     /*! \param name Name of member to be removed.
         \return Whether the member existed.
-        \note Removing member is implemented by moving the last member. So the ordering of members is changed.
+        \note This function may reorder the object members. Use \ref
+            EraseMember(ConstMemberIterator) if you need to preserve the
+            relative order of the remaining members.
         \note Linear time complexity.
     */
     bool RemoveMember(const Ch* name) {
         GenericValue n(StringRef(name));
         return RemoveMember(n);
     }
+
+#if RAPIDJSON_HAS_STDSTRING
+    bool RemoveMember(const std::basic_string<Ch>& name) { return RemoveMember(GenericValue(StringRef(name))); }
+#endif
 
     template <typename SourceAllocator>
     bool RemoveMember(const GenericValue<Encoding, SourceAllocator>& name) {
@@ -1043,8 +1151,9 @@ public:
     //! Remove a member in object by iterator.
     /*! \param m member iterator (obtained by FindMember() or MemberBegin()).
         \return the new iterator after removal.
-        \note Removing member is implemented by moving the last member. So the ordering of members is changed.
-        \note Use \ref EraseMember(ConstMemberIterator) instead, if you need to rely on a stable member ordering.
+        \note This function may reorder the object members. Use \ref
+            EraseMember(ConstMemberIterator) if you need to preserve the
+            relative order of the remaining members.
         \note Constant time complexity.
     */
     MemberIterator RemoveMember(MemberIterator m) {
@@ -1071,7 +1180,8 @@ public:
         \pre IsObject() == true && \ref MemberBegin() <= \c pos < \ref MemberEnd()
         \return Iterator following the removed element.
             If the iterator \c pos refers to the last element, the \ref MemberEnd() iterator is returned.
-        \note Other than \ref RemoveMember(MemberIterator), this function preserves the ordering of the members.
+        \note This function preserves the relative order of the remaining object
+            members. If you do not need this, use the more efficient \ref RemoveMember(MemberIterator).
         \note Linear time complexity.
     */
     MemberIterator EraseMember(ConstMemberIterator pos) {
@@ -1083,7 +1193,8 @@ public:
         \param last  iterator following the last member to remove
         \pre IsObject() == true && \ref MemberBegin() <= \c first <= \c last <= \ref MemberEnd()
         \return Iterator following the last removed element.
-        \note Other than \ref RemoveMember(MemberIterator), this function preserves the ordering of the members.
+        \note This function preserves the relative order of the remaining object
+            members.
         \note Linear time complexity.
     */
     MemberIterator EraseMember(ConstMemberIterator first, ConstMemberIterator last) {
@@ -1100,6 +1211,31 @@ public:
         std::memmove(&*pos, &*last, (MemberEnd() - last) * sizeof(Member));
         data_.o.size -= (last - first);
         return pos;
+    }
+
+    //! Erase a member in object by its name.
+    /*! \param name Name of member to be removed.
+        \return Whether the member existed.
+        \note Linear time complexity.
+    */
+    bool EraseMember(const Ch* name) {
+        GenericValue n(StringRef(name));
+        return EraseMember(n);
+    }
+
+#if RAPIDJSON_HAS_STDSTRING
+    bool EraseMember(const std::basic_string<Ch>& name) { return EraseMember(GenericValue(StringRef(name))); }
+#endif
+
+    template <typename SourceAllocator>
+    bool EraseMember(const GenericValue<Encoding, SourceAllocator>& name) {
+        MemberIterator m = FindMember(name);
+        if (m != MemberEnd()) {
+            EraseMember(m);
+            return true;
+        }
+        else
+            return false;
     }
 
     //@}
@@ -1132,14 +1268,9 @@ public:
     }
 
     //! Get an element from array by index.
-    /*! \param index Zero-based index of element.
-\code
-Value a(kArrayType);
-a.PushBack(123);
-int x = a[0].GetInt();              // Error: operator[ is ambiguous, as 0 also mean a null pointer of const char* type.
-int y = a[SizeType(0)].GetInt();    // Cast to SizeType will work.
-int z = a[0u].GetInt();             // This works too.
-\endcode
+    /*! \pre IsArray() == true
+        \param index Zero-based index of element.
+        \see operator[](T*)
     */
     GenericValue& operator[](SizeType index) {
         RAPIDJSON_ASSERT(IsArray());
@@ -1362,7 +1493,7 @@ int z = a[0u].GetInt();             // This works too.
         \post IsString() == true && GetString() != s.data() && strcmp(GetString(),s.data() == 0 && GetStringLength() == s.size()
         \note Requires the definition of the preprocessor symbol \ref RAPIDJSON_HAS_STDSTRING.
     */
-    GenericValue& SetString(const std::basic_string<Ch>& s, Allocator& allocator) { return SetString(s.data(), s.size(), allocator); }
+    GenericValue& SetString(const std::basic_string<Ch>& s, Allocator& allocator) { return SetString(s.data(), SizeType(s.size()), allocator); }
 #endif
 
     //@}
@@ -1385,6 +1516,7 @@ int z = a[0u].GetInt();             // This works too.
             if (!handler.StartObject())
                 return false;
             for (ConstMemberIterator m = MemberBegin(); m != MemberEnd(); ++m) {
+                RAPIDJSON_ASSERT(m->name.IsString()); // User may change the type of name by MemberIterator.
                 if (!handler.Key(m->name.GetString(), m->name.GetStringLength(), (m->name.flags_ & kCopyFlag) != 0))
                     return false;
                 if (!m->value.Accept(handler))
@@ -1403,17 +1535,14 @@ int z = a[0u].GetInt();             // This works too.
         case kStringType:
             return handler.String(GetString(), GetStringLength(), (flags_ & kCopyFlag) != 0);
     
-        case kNumberType:
+        default:
+            RAPIDJSON_ASSERT(GetType() == kNumberType);
             if (IsInt())            return handler.Int(data_.n.i.i);
             else if (IsUint())      return handler.Uint(data_.n.u.u);
             else if (IsInt64())     return handler.Int64(data_.n.i64);
             else if (IsUint64())    return handler.Uint64(data_.n.u64);
             else                    return handler.Double(data_.n.d);
-    
-        default:
-            RAPIDJSON_ASSERT(false);
         }
-        return false;
     }
 
 private:
@@ -1526,16 +1655,24 @@ private:
     // Initialize this value as array with initial data, without calling destructor.
     void SetArrayRaw(GenericValue* values, SizeType count, Allocator& allocator) {
         flags_ = kArrayFlag;
-        data_.a.elements = (GenericValue*)allocator.Malloc(count * sizeof(GenericValue));
-        std::memcpy(data_.a.elements, values, count * sizeof(GenericValue));
+        if (count) {
+            data_.a.elements = (GenericValue*)allocator.Malloc(count * sizeof(GenericValue));
+            std::memcpy(data_.a.elements, values, count * sizeof(GenericValue));
+        }
+        else
+            data_.a.elements = NULL;
         data_.a.size = data_.a.capacity = count;
     }
 
     //! Initialize this value as object with initial data, without calling destructor.
     void SetObjectRaw(Member* members, SizeType count, Allocator& allocator) {
         flags_ = kObjectFlag;
-        data_.o.members = (Member*)allocator.Malloc(count * sizeof(Member));
-        std::memcpy(data_.o.members, members, count * sizeof(Member));
+        if (count) {
+            data_.o.members = (Member*)allocator.Malloc(count * sizeof(Member));
+            std::memcpy(data_.o.members, members, count * sizeof(Member));
+        }
+        else
+            data_.o.members = NULL;
         data_.o.size = data_.o.capacity = count;
     }
 
@@ -1620,12 +1757,51 @@ public:
         allocator_(allocator), ownAllocator_(0), stack_(stackAllocator, stackCapacity), parseResult_()
     {
         if (!allocator_)
-            ownAllocator_ = allocator_ = new Allocator();
+            ownAllocator_ = allocator_ = RAPIDJSON_NEW(Allocator());
     }
 
-    ~GenericDocument() {
-        delete ownAllocator_;
+#if RAPIDJSON_HAS_CXX11_RVALUE_REFS
+    //! Move constructor in C++11
+    GenericDocument(GenericDocument&& rhs) RAPIDJSON_NOEXCEPT
+        : ValueType(std::move(rhs)),
+          allocator_(rhs.allocator_),
+          ownAllocator_(rhs.ownAllocator_),
+          stack_(std::move(rhs.stack_)),
+          parseResult_(rhs.parseResult_)
+    {
+        rhs.allocator_ = 0;
+        rhs.ownAllocator_ = 0;
+        rhs.parseResult_ = ParseResult();
     }
+#endif
+
+    ~GenericDocument() {
+        Destroy();
+    }
+
+#if RAPIDJSON_HAS_CXX11_RVALUE_REFS
+    //! Move assignment in C++11
+    GenericDocument& operator=(GenericDocument&& rhs) RAPIDJSON_NOEXCEPT
+    {
+        // The cast to ValueType is necessary here, because otherwise it would
+        // attempt to call GenericValue's templated assignment operator.
+        ValueType::operator=(std::forward<ValueType>(rhs));
+
+        // Calling the destructor here would prematurely call stack_'s destructor
+        Destroy();
+
+        allocator_ = rhs.allocator_;
+        ownAllocator_ = rhs.ownAllocator_;
+        stack_ = std::move(rhs.stack_);
+        parseResult_ = rhs.parseResult_;
+
+        rhs.allocator_ = 0;
+        rhs.ownAllocator_ = 0;
+        rhs.parseResult_ = ParseResult();
+
+        return *this;
+    }
+#endif
 
     //!@name Parse from stream
     //!@{
@@ -1640,7 +1816,7 @@ public:
     template <unsigned parseFlags, typename SourceEncoding, typename InputStream>
     GenericDocument& ParseStream(InputStream& is) {
         ValueType::SetNull(); // Remove existing root if exist
-        GenericReader<SourceEncoding, Encoding, Allocator> reader(&GetAllocator());
+        GenericReader<SourceEncoding, Encoding, StackAllocator> reader(&stack_.GetAllocator());
         ClearStackOnExit scope(*this);
         parseResult_ = reader.template Parse<parseFlags>(is, *this);
         if (parseResult_) {
@@ -1658,7 +1834,7 @@ public:
     */
     template <unsigned parseFlags, typename InputStream>
     GenericDocument& ParseStream(InputStream& is) {
-        return ParseStream<parseFlags,Encoding,InputStream>(is);
+        return ParseStream<parseFlags, Encoding, InputStream>(is);
     }
 
     //! Parse JSON text from an input stream (with \ref kParseDefaultFlags)
@@ -1675,18 +1851,6 @@ public:
     //!@name Parse in-place from mutable string
     //!@{
 
-    //! Parse JSON text from a mutable string (with Encoding conversion)
-    /*! \tparam parseFlags Combination of \ref ParseFlag.
-        \tparam SourceEncoding Transcoding from input Encoding
-        \param str Mutable zero-terminated string to be parsed.
-        \return The document itself for fluent API.
-    */
-    template <unsigned parseFlags, typename SourceEncoding>
-    GenericDocument& ParseInsitu(Ch* str) {
-        GenericInsituStringStream<Encoding> s(str);
-        return ParseStream<parseFlags | kParseInsituFlag, SourceEncoding>(s);
-    }
-
     //! Parse JSON text from a mutable string
     /*! \tparam parseFlags Combination of \ref ParseFlag.
         \param str Mutable zero-terminated string to be parsed.
@@ -1694,7 +1858,8 @@ public:
     */
     template <unsigned parseFlags>
     GenericDocument& ParseInsitu(Ch* str) {
-        return ParseInsitu<parseFlags, Encoding>(str);
+        GenericInsituStringStream<Encoding> s(str);
+        return ParseStream<parseFlags | kParseInsituFlag>(s);
     }
 
     //! Parse JSON text from a mutable string (with \ref kParseDefaultFlags)
@@ -1702,7 +1867,7 @@ public:
         \return The document itself for fluent API.
     */
     GenericDocument& ParseInsitu(Ch* str) {
-        return ParseInsitu<kParseDefaultFlags, Encoding>(str);
+        return ParseInsitu<kParseDefaultFlags>(str);
     }
     //!@}
 
@@ -1809,6 +1974,8 @@ private:
     }
 
 private:
+    //! Prohibit copying
+    GenericDocument(const GenericDocument&);
     //! Prohibit assignment
     GenericDocument& operator=(const GenericDocument&);
 
@@ -1819,6 +1986,10 @@ private:
         else
             stack_.Clear();
         stack_.ShrinkToFit();
+    }
+
+    void Destroy() {
+        RAPIDJSON_DELETE(ownAllocator_);
     }
 
     static const size_t kDefaultStackCapacity = 1024;
@@ -1837,12 +2008,29 @@ template <typename SourceAllocator>
 inline
 GenericValue<Encoding,Allocator>::GenericValue(const GenericValue<Encoding,SourceAllocator>& rhs, Allocator& allocator)
 {
-    GenericDocument<Encoding,Allocator> d(&allocator);
-    rhs.Accept(d);
-    RawAssign(*d.stack_.template Pop<GenericValue>(1));
+    switch (rhs.GetType()) {
+    case kObjectType:
+    case kArrayType: { // perform deep copy via SAX Handler
+            GenericDocument<Encoding,Allocator> d(&allocator);
+            rhs.Accept(d);
+            RawAssign(*d.stack_.template Pop<GenericValue>(1));
+        }
+        break;
+    case kStringType:
+        if (rhs.flags_ == kConstStringFlag) {
+            flags_ = rhs.flags_;
+            data_  = *reinterpret_cast<const Data*>(&rhs.data_);
+        } else {
+            SetStringRaw(StringRef(rhs.GetString(), rhs.GetStringLength()), allocator);
+        }
+        break;
+    default: // kNumberType, kTrueType, kFalseType, kNullType
+        flags_ = rhs.flags_;
+        data_  = *reinterpret_cast<const Data*>(&rhs.data_);
+    }
 }
 
-} // namespace rapidjson
+RAPIDJSON_NAMESPACE_END
 
 #if defined(_MSC_VER) || defined(__GNUC__)
 RAPIDJSON_DIAG_POP
