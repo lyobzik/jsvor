@@ -5,6 +5,7 @@
 #include "../include/JsonResolver.h"
 
 #include "JsonType.h"
+#include "ValidationContext.h"
 
 namespace JsonSchemaValidator {
 
@@ -110,7 +111,12 @@ void JsonSchema::Validate(std::string const &document, ValidationResult &result)
 }
 
 void JsonSchema::Validate(JsonValue const &document, ValidationResult &result) const {
-	impl_->root_object_->Validate(document, result);
+	ValidationContext context(result);
+	Validate(document, context);
+}
+
+void JsonSchema::Validate(JsonValue const &document, ValidationContext &context) const {
+	impl_->root_object_->Validate(document, context);
 }
 
 void JsonSchema::Initialize(JsonValue const &schema, JsonResolverPtr const &resolver) {

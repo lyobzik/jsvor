@@ -4,6 +4,7 @@
 #include <JsonResolver.h>
 
 #include "../Regex.h"
+#include "../ValidationContext.h"
 
 namespace JsonSchemaValidator {
 
@@ -27,16 +28,16 @@ bool JsonString::CheckValueType(JsonValue const &json) const {
 	return json.IsString();
 }
 
-void JsonString::CheckTypeRestrictions(JsonValue const &json, ValidationResult &result) const {
+void JsonString::CheckTypeRestrictions(JsonValue const &json, ValidationContext &context) const {
 	if (json.GetStringLength() < min_length_) {
-		return RaiseError<MinimalLengthError>(result, min_length_);
+		return RaiseError<MinimalLengthError>(context, min_length_);
 	}
 	if (json.GetStringLength() > max_length_) {
-		return RaiseError<MaximalLengthError>(result, max_length_);
+		return RaiseError<MaximalLengthError>(context, max_length_);
 	}
 
 	if (pattern_ && !pattern_->IsCorrespond(GetValue<char const *>(json))) {
-		return RaiseError<PatternError>(result, pattern_->Pattern());
+		return RaiseError<PatternError>(context, pattern_->Pattern());
 	}
 }
 
@@ -101,7 +102,7 @@ bool JsonBoolean::CheckValueType(JsonValue const &json) const {
 }
 
 void JsonBoolean::CheckTypeRestrictions(JsonValue const &/*json*/,
-	                                    ValidationResult &/*result*/) const {
+	                                    ValidationContext &/*context*/) const {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -115,7 +116,7 @@ bool JsonNull::CheckValueType(JsonValue const &json) const {
 }
 
 void JsonNull::CheckTypeRestrictions(JsonValue const &/*json*/,
-                                     ValidationResult &/*result*/) const {
+                                     ValidationContext &/*context*/) const {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -173,20 +174,20 @@ bool JsonObject::CheckValueType(JsonValue const &json) const {
 	return json.IsObject();
 }
 
-void JsonObject::CheckTypeRestrictions(JsonValue const &json, ValidationResult &result) const {
+void JsonObject::CheckTypeRestrictions(JsonValue const &json, ValidationContext &context) const {
 	for (auto const &member : GetMembers(json)) {
 		bool described_property = false;
 		char const *name = GetValue<char const *>(member.name);
 		auto propertyIt = properties_.find(name);
 		if (propertyIt != properties_.end()) {
-			propertyIt->second->Validate(member.value, result);
-			if (!result) return;
+			propertyIt->second->Validate(member.value, context);
+			if (!context.GetResult()) return;
 			described_property = true;
 		}
 		for (auto const &pattern_property : pattern_properties_) {
 			if (pattern_property.first->IsCorrespond(name)) {
-				pattern_property.second->Validate(member.value, result);
-				if (!result) return;
+				pattern_property.second->Validate(member.value, context);
+				if (!context.GetResult()) return;
 				described_property = true;
 			}
 		}
@@ -194,12 +195,12 @@ void JsonObject::CheckTypeRestrictions(JsonValue const &json, ValidationResult &
 		if (!described_property) {
 			if (may_contains_additional_properties_.exists) {
 				if (!may_contains_additional_properties_.value) {
-					return RaiseError<AdditionalPropertyError>(result);
+					return RaiseError<AdditionalPropertyError>(context);
 				}
 			}
 			else if (additional_properties_.exists) {
-				additional_properties_.value->Validate(member.value, result);
-				if (!result) return;
+				additional_properties_.value->Validate(member.value, context);
+				if (!context.GetResult()) return;
 			}
 		}
 
@@ -208,7 +209,7 @@ void JsonObject::CheckTypeRestrictions(JsonValue const &json, ValidationResult &
 			if (simpleArrayDependIt != simple_dependencies_.end()) {
 				for (auto const &depend : simpleArrayDependIt->second) {
 					if (!json.HasMember(depend)) {
-						return RaiseError<DependenciesRestrictionsError>(result, name);
+						return RaiseError<DependenciesRestrictionsError>(context, name);
 					}
 				}
 			}
@@ -216,14 +217,14 @@ void JsonObject::CheckTypeRestrictions(JsonValue const &json, ValidationResult &
 		if (!schema_dependencies_.empty()) {
 			auto schemaDependIt = schema_dependencies_.find(name);
 			if (schemaDependIt != schema_dependencies_.end()) {
-				schemaDependIt->second->Validate(json, result);
-				if (!result) return;
+				schemaDependIt->second->Validate(json, context);
+				if (!context.GetResult()) return;
 			}
 		}
 	}
 	for (auto const &property : properties_) {
 		if (property.second->IsRequired() && !json.HasMember(property.first)) {
-			return RaiseError<RequiredPropertyError>(result, property.first);
+			return RaiseError<RequiredPropertyError>(context, property.first);
 		}
 	}
 }
@@ -264,19 +265,19 @@ bool JsonArray::CheckValueType(JsonValue const &json) const {
 	return json.IsArray();
 }
 
-void JsonArray::CheckTypeRestrictions(JsonValue const &json, ValidationResult &result) const {
+void JsonArray::CheckTypeRestrictions(JsonValue const &json, ValidationContext &context) const {
 	if (json.Size() < min_items_) {
-		return RaiseError<MinimalItemsCountError>(result, min_items_);
+		return RaiseError<MinimalItemsCountError>(context, min_items_);
 	}
 	if (json.Size() > max_items_) {
-		return RaiseError<MaximalItemsCountError>(result, max_items_);
+		return RaiseError<MaximalItemsCountError>(context, max_items_);
 	}
 
 	if (unique_items_) {
 		for (rapidjson::SizeType i = 0; i < json.Size() - 1; ++i) {
 			for (rapidjson::SizeType j = i + 1; j < json.Size(); ++j) {
 				if (IsEqual(json[i], json[j])) {
-					return RaiseError<UniqueItemsError>(result);
+					return RaiseError<UniqueItemsError>(context);
 				}
 			}
 		}
@@ -284,26 +285,26 @@ void JsonArray::CheckTypeRestrictions(JsonValue const &json, ValidationResult &r
 
 	if (items_.exists) {
 		for (rapidjson::SizeType i = 0; i < json.Size(); ++i) {
-			items_.value->Validate(json[i], result);
-			if (!result) return;
+			items_.value->Validate(json[i], context);
+			if (!context.GetResult()) return;
 		}
 	}
 	else if (items_array_.exists) {
 		rapidjson::SizeType i = 0;
 		for (; i < json.Size() && i < items_array_.value.size(); ++i) {
-			items_array_.value[i]->Validate(json[i], result);
-			if (!result) return;
+			items_array_.value[i]->Validate(json[i], context);
+			if (!context.GetResult()) return;
 		}
 		if (i < json.Size()) {
 			if (may_contains_additional_items_.exists) {
 				if (!may_contains_additional_items_.value) {
-					return RaiseError<AdditionalItemsError>(result);
+					return RaiseError<AdditionalItemsError>(context);
 				}
 			}
 			else if (additional_items_.exists) {
 				for (; i < json.Size(); ++i) {
-					additional_items_.value->Validate(json[i], result);
-					if (!result) return;
+					additional_items_.value->Validate(json[i], context);
+					if (!context.GetResult()) return;
 				}
 			}
 		}

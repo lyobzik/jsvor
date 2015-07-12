@@ -18,7 +18,7 @@ public:
 
 private:
 	virtual bool CheckValueType(JsonValue const &json) const;
-	virtual void CheckTypeRestrictions(JsonValue const &json, ValidationResult &result) const;
+	virtual void CheckTypeRestrictions(JsonValue const &json, ValidationContext &context) const;
 
 	size_t min_length_;
 	size_t max_length_;
@@ -39,7 +39,7 @@ public:
 private:
 	typedef double DividerType;
 
-	virtual void CheckTypeRestrictions(JsonValue const &json, ValidationResult &result) const;
+	virtual void CheckTypeRestrictions(JsonValue const &json, ValidationContext &context) const;
 
 	static bool IsEqual(Type left, Type right);
 	static bool CheckDivisibility(Type value, DividerType divider);
@@ -81,7 +81,7 @@ public:
 
 private:
 	virtual bool CheckValueType(JsonValue const &json) const;
-	virtual void CheckTypeRestrictions(JsonValue const &json, ValidationResult &result) const;
+	virtual void CheckTypeRestrictions(JsonValue const &json, ValidationContext &context) const;
 }; // class JsonBoolean : public JsonTypeImpl<bool>
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -92,7 +92,7 @@ public:
 
 private:
 	virtual bool CheckValueType(JsonValue const &json) const;
-	virtual void CheckTypeRestrictions(JsonValue const &json, ValidationResult &result) const;
+	virtual void CheckTypeRestrictions(JsonValue const &json, ValidationContext &context) const;
 }; // class JsonNull : public JsonTypeImpl<JsonNullValue>
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -103,7 +103,7 @@ public:
 
 private:
 	virtual bool CheckValueType(JsonValue const &json) const;
-	virtual void CheckTypeRestrictions(JsonValue const &json, ValidationResult &result) const;
+	virtual void CheckTypeRestrictions(JsonValue const &json, ValidationContext &context) const;
 
 	JsonTypePtr CreateMember(JsonValueMember const &member, JsonResolverPtr const &resolver) const;
 
@@ -126,7 +126,7 @@ public:
 
 private:
 	virtual bool CheckValueType(JsonValue const &json) const;
-	virtual void CheckTypeRestrictions(JsonValue const &json, ValidationResult &result) const;
+	virtual void CheckTypeRestrictions(JsonValue const &json, ValidationContext &context) const;
 
 	size_t min_items_;
 	size_t max_items_;

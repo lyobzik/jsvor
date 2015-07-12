@@ -3,6 +3,7 @@
 #include <JsonErrors.h>
 
 #include "../Regex.h"
+#include "../ValidationContext.h"
 
 namespace JsonSchemaValidator {
 
@@ -50,11 +51,11 @@ JsonTypeImpl<Type>::JsonTypeImpl(JsonValue const &schema, JsonResolverPtr const 
 
 template <typename Type>
 void JsonTypeImpl<Type>::CheckEnumsRestrictions(JsonValue const &json,
-                                                ValidationResult &result) const {
+                                                ValidationContext &context) const {
 	if (enum_.exists) {
 		Type value = GetValue<Type>(json);
 		if (!JsonChecker<Type>::ContainsValue(enum_.value, value)) {
-			return RaiseError<EnumValueError>(result);
+			return RaiseError<EnumValueError>(context);
 		}
 	}
 }

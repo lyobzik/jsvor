@@ -6,6 +6,7 @@
 
 #include "Defs.h"
 #include "RapidJsonHelpers.h"
+#include "ValidationContext.h"
 
 namespace JsonSchemaValidator {
 
@@ -33,7 +34,7 @@ public:
 	JsonType(JsonValue const &schema, JsonResolverPtr const &resolver, std::string const &path);
 	virtual ~JsonType() { }
 
-	virtual void Validate(JsonValue const &json, ValidationResult &result) const;
+	virtual void Validate(JsonValue const &json, ValidationContext &context) const;
 
 	bool IsRequired() const;
 
@@ -44,8 +45,10 @@ protected:
 	std::string MemberPath(char const *member) const;
 
 	template <typename DocumentErrorType, typename... Args>
-	void RaiseError(ValidationResult &result, Args&&... args) const {
-		result.SetError<DocumentErrorType>(path_, args...);
+	void RaiseError(ValidationContext &context, Args&&... args) const {
+		auto &result = context.GetResult();
+		auto path = context.GetPath(path_);
+		result.SetError<DocumentErrorType>(path, args...);
 	}
 	static void RaiseError(SchemaErrors error);
 	static JsonTypePtr CreateJsonTypeFromArrayElement(JsonValue const &schema,
@@ -55,12 +58,12 @@ protected:
 	static JsonTypeCreator GetCreator(JsonValue const &type);
 
 private:
-	void ValidateRef(JsonValue const &json, ValidationResult &result) const;
-	void ValidateExtends(JsonValue const &json, ValidationResult &result) const;
+	void ValidateRef(JsonValue const &json, ValidationContext &context) const;
+	void ValidateExtends(JsonValue const &json, ValidationContext &context) const;
 
 	virtual bool CheckValueType(JsonValue const &json) const = 0;
-	virtual void CheckTypeRestrictions(JsonValue const &json, ValidationResult &result) const = 0;
-	virtual void CheckEnumsRestrictions(JsonValue const &json, ValidationResult &result) const = 0;
+	virtual void CheckTypeRestrictions(JsonValue const &json, ValidationContext &context) const = 0;
+	virtual void CheckEnumsRestrictions(JsonValue const &json, ValidationContext &context) const = 0;
 
 	bool required_;
 	std::string id_;

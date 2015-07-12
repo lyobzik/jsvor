@@ -8,6 +8,8 @@
 
 namespace JsonSchemaValidator {
 
+class ValidationContext;
+
 // Json-schema for validating json-documents.
 class JsonSchema {
 public:
@@ -27,6 +29,9 @@ public:
 	void Validate(JsonValue const &document, ValidationResult &result) const;
 
 private:
+	friend class JsonType;
+
+	void Validate(JsonValue const &document, ValidationContext &context) const;
 	void Initialize(JsonValue const &schema, JsonResolverPtr const &resolver);
 
 	struct Impl;

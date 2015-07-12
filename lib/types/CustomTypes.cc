@@ -4,6 +4,7 @@
 #include <JsonResolver.h>
 
 #include "../Regex.h"
+#include "../ValidationContext.h"
 
 #include "PrimitiveTypes.h"
 
@@ -25,12 +26,12 @@ bool JsonCustomType::CheckValueType(JsonValue const &/*json*/) const {
 	return true;
 }
 
-void JsonCustomType::CheckTypeRestrictions(JsonValue const &json, ValidationResult &result) const {
-	return custom_type_->Validate(json, result);
+void JsonCustomType::CheckTypeRestrictions(JsonValue const &json, ValidationContext &context) const {
+	return custom_type_->Validate(json, context);
 }
 
 void JsonCustomType::CheckEnumsRestrictions(JsonValue const &/*json*/,
-                                            ValidationResult &/*result*/) const {
+                                            ValidationContext &/*context*/) const {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -66,25 +67,28 @@ JsonAny::JsonAny(JsonValue const &schema, JsonResolverPtr const &resolver,
 	}
 }
 
-void JsonAny::Validate(JsonValue const &json, ValidationResult &result) const {
+void JsonAny::Validate(JsonValue const &json, ValidationContext &context) const {
 	for (auto const &disallow : disallow_) {
 		ValidationResult disallow_result;
-		disallow->Validate(json, disallow_result);
+		ValidationContext disallow_context(disallow_result);
+		disallow->Validate(json, disallow_context);
 		if (disallow_result) {
-			return RaiseError<DisallowTypeError>(result);
+			return RaiseError<DisallowTypeError>(context);
 		}
 	}
-	GetSchema(json)->Validate(json, result);
+	GetSchema(json)->Validate(json, context);
 }
 
 bool JsonAny::CheckValueType(JsonValue const &/*json*/) const {
 	return true;
 }
 
-void JsonAny::CheckTypeRestrictions(JsonValue const &/*json*/, ValidationResult &/*res*/) const {
+void JsonAny::CheckTypeRestrictions(JsonValue const &/*json*/,
+                                    ValidationContext &/*context*/) const {
 }
 
-void JsonAny::CheckEnumsRestrictions(JsonValue const &/*json*/, ValidationResult &/*res*/) const {
+void JsonAny::CheckEnumsRestrictions(JsonValue const &/*json*/,
+                                     ValidationContext &/*context*/) const {
 }
 
 JsonTypePtr const &JsonAny::GetSchema(JsonValue const &json) const {
@@ -119,15 +123,16 @@ JsonUnionType::JsonUnionType(JsonValue const &schema, JsonResolverPtr const &res
 	}
 }
 
-void JsonUnionType::Validate(JsonValue const &json, ValidationResult &result) const {
+void JsonUnionType::Validate(JsonValue const &json, ValidationContext &context) const {
 	for (auto const &type : type_) {
 		ValidationResult type_result;
-		type->Validate(json, type_result);
+		ValidationContext type_context(type_result);
+		type->Validate(json, type_context);
 		if (type_result) {
 			return;
 		}
 	}
-	return RaiseError<NeitherTypeError>(result); // TODO: Specify all child errors.
+	return RaiseError<NeitherTypeError>(context); // TODO: Specify all child errors.
 }
 
 bool JsonUnionType::CheckValueType(JsonValue const &/*json*/) const {
@@ -135,11 +140,11 @@ bool JsonUnionType::CheckValueType(JsonValue const &/*json*/) const {
 }
 
 void JsonUnionType::CheckTypeRestrictions(JsonValue const &/*json*/,
-                                          ValidationResult &/*result*/) const {
+                                          ValidationContext &/*context*/) const {
 }
 
 void JsonUnionType::CheckEnumsRestrictions(JsonValue const &/*json*/,
-                                           ValidationResult &/*result*/) const {
+                                           ValidationContext &/*context*/) const {
 }
 
 } // namespace JsonSchemaValidator

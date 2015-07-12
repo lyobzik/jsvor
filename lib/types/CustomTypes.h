@@ -20,8 +20,8 @@ public:
 
 private:
 	virtual bool CheckValueType(JsonValue const &json) const;
-	virtual void CheckTypeRestrictions(JsonValue const &json, ValidationResult &result) const;
-	virtual void CheckEnumsRestrictions(JsonValue const &json, ValidationResult &result) const;
+	virtual void CheckTypeRestrictions(JsonValue const &json, ValidationContext &context) const;
+	virtual void CheckEnumsRestrictions(JsonValue const &json, ValidationContext &context) const;
 
 	JsonTypePtr custom_type_;
 }; // class JsonCustomType : public JsonType
@@ -33,14 +33,14 @@ public:
 	JsonAny(JsonValue const &schema, JsonResolverPtr const &resolver,
 	        std::string const &path);
 
-	virtual void Validate(JsonValue const &json, ValidationResult &result) const;
+	virtual void Validate(JsonValue const &json, ValidationContext &context) const;
 
 private:
 	friend class JsonUnionType;
 
 	virtual bool CheckValueType(JsonValue const &json) const;
-	virtual void CheckTypeRestrictions(JsonValue const &json, ValidationResult &result) const;
-	virtual void CheckEnumsRestrictions(JsonValue const &json, ValidationResult &result) const;
+	virtual void CheckTypeRestrictions(JsonValue const &json, ValidationContext &context) const;
+	virtual void CheckEnumsRestrictions(JsonValue const &json, ValidationContext &context) const;
 
 	JsonTypePtr const &GetSchema(JsonValue const &json) const;
 
@@ -62,12 +62,12 @@ public:
 	JsonUnionType(JsonValue const &schema, JsonResolverPtr const &resolver,
 	              std::string const &path);
 
-	virtual void Validate(JsonValue const &json, ValidationResult &result) const;
+	virtual void Validate(JsonValue const &json,ValidationContext &context) const;
 
 private:
 	virtual bool CheckValueType(JsonValue const &json) const;
-	virtual void CheckTypeRestrictions(JsonValue const &json, ValidationResult &result) const;
-	virtual void CheckEnumsRestrictions(JsonValue const &json, ValidationResult &result) const;
+	virtual void CheckTypeRestrictions(JsonValue const &json, ValidationContext &context) const;
+	virtual void CheckEnumsRestrictions(JsonValue const &json, ValidationContext &context) const;
 
 	std::set<JsonTypePtr> type_;
 }; // class JsonUnionType : public JsonType

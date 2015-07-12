@@ -16,6 +16,7 @@ HEADERS = ../include/JsonResolver.h \
           Defs.h \
           JsonType.h \
           Regex.h \
+          ValidationContext.h \
           types/JsonTypeImpl.h \
           types/PrimitiveTypes.h \
           types/CustomTypes.h \
@@ -27,6 +28,7 @@ SOURCES = JsonResolver.cc \
           JsonType.cc \
           RapidJsonHelpers.cc \
           Regex.cc \
+          ValidationContext.cc \
           types/JsonTypeImpl.inl \
           types/PrimitiveTypes.cc \
           types/PrimitiveTypes.inl \

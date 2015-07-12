@@ -9,6 +9,7 @@
 
 #include "RapidJsonHelpers.h"
 #include "JsonSchema.h"
+#include "ValidationContext.h"
 #include "types/JsonTypeImpl.h"
 #include "types/PrimitiveTypes.h"
 #include "types/CustomTypes.h"
@@ -47,21 +48,21 @@ JsonType::JsonType(JsonValue const &schema, JsonResolverPtr const &resolver,
 	}
 }
 
-void JsonType::Validate(JsonValue const &json, ValidationResult &result) const {
-	ValidateRef(json, result);
-	if (result) {
-		ValidateExtends(json, result);
+void JsonType::Validate(JsonValue const &json, ValidationContext &context) const {
+	ValidateRef(json, context);
+	if (context.GetResult()) {
+		ValidateExtends(json, context);
 	}
-	if (result) {
+	if (context.GetResult()) {
 		if (!CheckValueType(json)) {
-			RaiseError<TypeError>(result); //TODO: Specify required type
+			RaiseError<TypeError>(context); //TODO: Specify required type
 		}
 	}
-	if (result) {
-		CheckEnumsRestrictions(json, result);
+	if (context.GetResult()) {
+		CheckEnumsRestrictions(json, context);
 	}
-	if (result) {
-		CheckTypeRestrictions(json, result);
+	if (context.GetResult()) {
+		CheckTypeRestrictions(json, context);
 	}
 }
 
@@ -70,17 +71,18 @@ bool JsonType::IsRequired() const
 	return required_;
 }
 
-void JsonType::ValidateExtends(JsonValue const &json, ValidationResult &result) const {
+void JsonType::ValidateExtends(JsonValue const &json, ValidationContext &context) const {
 	for (auto const &json_type : extends_) {
-		json_type->Validate(json, result);
+		json_type->Validate(json, context);
 	}
 }
 
-void JsonType::ValidateRef(JsonValue const &json, ValidationResult &result) const {
+void JsonType::ValidateRef(JsonValue const &json, ValidationContext &context) const {
 	if (ref_.exists && resolver_) {
+		ResolvePathHolder path_holder(path_, context);
 		JsonSchemaPtr ref_schema = resolver_->Resolve(ref_.value);
 		if (ref_schema) {
-			ref_schema->Validate(json, result);
+			ref_schema->Validate(json, context);
 		}
 	}
 }

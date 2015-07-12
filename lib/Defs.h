@@ -9,6 +9,7 @@
 namespace JsonSchemaValidator {
 
 class ValidationResult;
+class ValidationContext;
 
 class JsonType;
 typedef std::shared_ptr<JsonType> JsonTypePtr;

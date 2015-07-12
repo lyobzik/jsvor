@@ -21,7 +21,7 @@ protected:
 	typedef Type ValueType;
 
 private:
-	virtual void CheckEnumsRestrictions(JsonValue const &json, ValidationResult &result) const;
+	virtual void CheckEnumsRestrictions(JsonValue const &json, ValidationContext &context) const;
 
 	JsonTypeProperty<std::vector<Type>> enum_;
 }; // class JsonTypeImpl : public JsonType
