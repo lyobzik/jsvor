@@ -47,7 +47,7 @@ PatternError::PatternError(std::string const &path, std::string const &pattern)
 }
 
 std::string PatternError::GetDescription() const {
-	return ToString("Element ", path_, " must pattern '", pattern_, "'.");
+	return ToString("Element ", path_, " must match pattern '", pattern_, "'.");
 }
 
 DivisibleValueError::DivisibleValueError(std::string const &path, double divisible_by)
