@@ -79,7 +79,6 @@ void JsonType::ValidateExtends(JsonValue const &json, ValidationContext &context
 
 void JsonType::ValidateRef(JsonValue const &json, ValidationContext &context) const {
 	if (ref_.exists && resolver_) {
-		ResolvePathHolder path_holder(path_, context);
 		JsonSchemaPtr ref_schema = resolver_->Resolve(ref_.value);
 		if (ref_schema) {
 			ref_schema->Validate(json, context);

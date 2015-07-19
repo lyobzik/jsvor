@@ -30,6 +30,7 @@ set(HEADERS
 		JsonType.h
 		Regex.h
 		ValidationContext.h
+		ValidationContext.inl
 		types/JsonTypeImpl.h
 		types/PrimitiveTypes.h
 		types/CustomTypes.h

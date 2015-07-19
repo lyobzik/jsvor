@@ -4,145 +4,158 @@
 
 namespace JsonSchemaValidator {
 
-DocumentError::DocumentError(std::string const &path)
-	: path_(path) {
+DocumentError::DocumentError()
+	: path_parts_() {
 }
 
 DocumentError::~DocumentError() {
 }
 
-EnumValueError::EnumValueError(std::string const &path)
-	: DocumentError(path) {
+std::string DocumentError::GetPath() const {
+	std::string result_path;
+	for (auto it = path_parts_.begin(); it != path_parts_.end(); ++it) {
+		result_path.append("/");
+		result_path.append(*it);
+	}
+
+	return result_path.empty() ? "/" : result_path;
+}
+
+void DocumentError::AddPath(std::string const &path) {
+	path_parts_.push_front(path);
+}
+
+EnumValueError::EnumValueError()
+	: DocumentError() {
 }
 
 EnumValueError::~EnumValueError() {
 }
 
 std::string EnumValueError::GetDescription() const {
-	return ToString("Element ", path_, " doesn't satisfy restriction on enumeration "
+	return ToString("Element ", GetPath(), " doesn't satisfy restriction on enumeration "
 	                "of all possible values");
 }
 
-MinimalLengthError::MinimalLengthError(std::string const &path, size_t limit)
-	: DocumentError(path)
+MinimalLengthError::MinimalLengthError(size_t limit)
+	: DocumentError()
 	, limit_(limit) {
 }
 
 std::string MinimalLengthError::GetDescription() const {
-	return ToString("Value length of element ", path_, " must be >= ", limit_, ".");
+	return ToString("Value length of element ", GetPath(), " must be >= ", limit_, ".");
 }
 
-MaximalLengthError::MaximalLengthError(std::string const &path, size_t limit)
-	: DocumentError(path)
+MaximalLengthError::MaximalLengthError(size_t limit)
+	: DocumentError()
 	, limit_(limit) {
 }
 
 std::string MaximalLengthError::GetDescription() const {
-	return ToString("Value length of element ", path_, " must be <= ", limit_, ".");
+	return ToString("Value length of element ", GetPath(), " must be <= ", limit_, ".");
 }
 
-PatternError::PatternError(std::string const &path, std::string const &pattern)
-	: DocumentError(path)
+PatternError::PatternError(std::string const &pattern)
+	: DocumentError()
 	, pattern_(pattern) {
 }
 
 std::string PatternError::GetDescription() const {
-	return ToString("Element ", path_, " must match pattern '", pattern_, "'.");
+	return ToString("Element ", GetPath(), " must match pattern '", pattern_, "'.");
 }
 
-DivisibleValueError::DivisibleValueError(std::string const &path, double divisible_by)
-	: DocumentError(path)
+DivisibleValueError::DivisibleValueError(double divisible_by)
+	: DocumentError()
 	, divisible_by_(divisible_by) {
 }
 
 std::string DivisibleValueError::GetDescription() const {
-	return ToString("Element ", path_, " must be divisible by ", divisible_by_, ".");
+	return ToString("Element ", GetPath(), " must be divisible by ", divisible_by_, ".");
 }
 
-AdditionalPropertyError::AdditionalPropertyError(std::string const &path)
-	: DocumentError(path) {
+AdditionalPropertyError::AdditionalPropertyError()
+	: DocumentError() {
 }
 
 std::string AdditionalPropertyError::GetDescription() const {
-	return ToString("Element ", path_, " cannot contain additional property.");
+	return ToString("Element ", GetPath(), " cannot contain additional property.");
 }
 
-DependenciesRestrictionsError::DependenciesRestrictionsError(std::string const &path,
-                                                             std::string const &name)
-	: DocumentError(path)
+DependenciesRestrictionsError::DependenciesRestrictionsError(std::string const &name)
+	: DocumentError()
 	, name_(name){
 }
 
 std::string DependenciesRestrictionsError::GetDescription() const {
-	return ToString("Element ", path_, " doesn't satisfy dependency restriction of "
+	return ToString("Element ", GetPath(), " doesn't satisfy dependency restriction of "
 	                "property ", name_, ".");
 }
 
-RequiredPropertyError::RequiredPropertyError(std::string const &path, std::string const &property)
-	: DocumentError(path)
+RequiredPropertyError::RequiredPropertyError(std::string const &property)
+	: DocumentError()
 	, property_(property){
 }
 
 std::string RequiredPropertyError::GetDescription() const {
-	return ToString("Element ", path_, " must contain property '", property_, "'.");
+	return ToString("Element ", GetPath(), " must contain property '", property_, "'.");
 }
 
-MinimalItemsCountError::MinimalItemsCountError(std::string const &path, size_t limit)
-	: DocumentError(path)
+MinimalItemsCountError::MinimalItemsCountError(size_t limit)
+	: DocumentError()
 	, limit_(limit) {
 }
 
 std::string MinimalItemsCountError::GetDescription() const {
-	return ToString("Array ", path_, " must contain >= ", limit_, " items.");
+	return ToString("Array ", GetPath(), " must contain >= ", limit_, " items.");
 }
 
-MaximalItemsCountError::MaximalItemsCountError(std::string const &path, size_t limit)
-	: DocumentError(path)
+MaximalItemsCountError::MaximalItemsCountError(size_t limit)
+	: DocumentError()
 	, limit_(limit) {
 }
 
 std::string MaximalItemsCountError::GetDescription() const {
-	return ToString("Array ", path_, " must contain <= '", limit_, " items.");
+	return ToString("Array ", GetPath(), " must contain <= '", limit_, " items.");
 }
 
-UniqueItemsError::UniqueItemsError(std::string const &path)
-	: DocumentError(path) {
+UniqueItemsError::UniqueItemsError()
+	: DocumentError() {
 }
 
 std::string UniqueItemsError::GetDescription() const {
-	return ToString("Array ", path_, " cannot contain equal items.");
+	return ToString("Array ", GetPath(), " cannot contain equal items.");
 }
 
-AdditionalItemsError::AdditionalItemsError(std::string const &path)
-	: DocumentError(path) {
+AdditionalItemsError::AdditionalItemsError()
+	: DocumentError() {
 }
 
 std::string AdditionalItemsError::GetDescription() const {
-	return ToString("Array ", path_, " cannot contain additional items.");
+	return ToString("Array ", GetPath(), " cannot contain additional items.");
 }
 
-DisallowTypeError::DisallowTypeError(std::string const &path)
-	: DocumentError(path) {
+DisallowTypeError::DisallowTypeError()
+	: DocumentError() {
 }
 
 std::string DisallowTypeError::GetDescription() const {
-	return ToString("Element ", path_, " satisfies one of disallowed types.");
+	return ToString("Element ", GetPath(), " satisfies one of disallowed types.");
 }
 
-NeitherTypeError::NeitherTypeError(std::string const &path)
-	: DocumentError(path) {
+NeitherTypeError::NeitherTypeError()
+	: DocumentError() {
 }
 
 std::string NeitherTypeError::GetDescription() const {
-	return ToString("Element ", path_, " doesn't satisfy any allow type.");
+	return ToString("Element ", GetPath(), " doesn't satisfy any allow type.");
 }
 
-TypeError::TypeError(std::string const &path)
-	: DocumentError(path) {
+TypeError::TypeError()
+	: DocumentError() {
 }
 
 std::string TypeError::GetDescription() const {
-	return ToString("Element ", path_, " has incorrect type.");
+	return ToString("Element ", GetPath(), " has incorrect type.");
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -152,6 +165,10 @@ ValidationResult::ValidationResult()
 
 std::string ValidationResult::ErrorDescription() const {
 	return error_ ? error_->GetDescription() : std::string();
+}
+
+void ValidationResult::AddPath(std::string const &path) {
+	error_->AddPath(path);
 }
 
 ValidationResult::operator bool() const {

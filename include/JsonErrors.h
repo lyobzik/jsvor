@@ -1,5 +1,6 @@
 #pragma once
 
+#include <list>
 #include <string>
 #include <exception>
 
@@ -11,18 +12,21 @@ namespace JsonSchemaValidator {
 // Errors that may occur in json-document validation.
 class DocumentError {
 public:
-	DocumentError(std::string const &path);
+	DocumentError();
 	virtual ~DocumentError();
 
 	virtual std::string GetDescription() const = 0;
 
+	std::string GetPath() const;
+	void AddPath(std::string const &path);
+
 protected:
-	std::string path_;
+	std::list<std::string> path_parts_;
 }; // class DocumentError
 
 class EnumValueError : public DocumentError {
 public:
-	EnumValueError(std::string const &path);
+	EnumValueError();
 	virtual ~EnumValueError();
 
 	virtual std::string GetDescription() const;
@@ -30,7 +34,7 @@ public:
 
 class MinimalLengthError : public DocumentError {
 public:
-	MinimalLengthError(std::string const &path, size_t limit);
+	explicit MinimalLengthError(size_t limit);
 
 	virtual std::string GetDescription() const;
 
@@ -40,7 +44,7 @@ private:
 
 class MaximalLengthError : public DocumentError {
 public:
-	MaximalLengthError(std::string const &path, size_t limit);
+	explicit MaximalLengthError(size_t limit);
 
 	virtual std::string GetDescription() const;
 
@@ -50,7 +54,7 @@ private:
 
 class PatternError : public DocumentError {
 public:
-	PatternError(std::string const &path, std::string const &pattern);
+	explicit PatternError(std::string const &pattern);
 
 	virtual std::string GetDescription() const;
 
@@ -61,14 +65,14 @@ private:
 template<typename Type>
 class MinimumValueError : public DocumentError {
 public:
-	MinimumValueError(std::string const &path, Type const &limit, bool exclusive)
-		: DocumentError(path)
+	MinimumValueError(Type const &limit, bool exclusive)
+		: DocumentError()
 		, limit_(limit)
 		, exclusive_(exclusive) {
 	}
 
 	virtual std::string GetDescription() const {
-		return ToString("Attribute ", path_, " must be ", exclusive_ ? ">" : ">=", limit_, ".");
+		return ToString("Attribute ", GetPath(), " must be ", exclusive_ ? ">" : ">=", limit_, ".");
 	}
 
 private:
@@ -79,14 +83,14 @@ private:
 template<typename Type>
 class MaximumValueError : public DocumentError {
 public:
-	MaximumValueError(std::string const &path, Type const &limit, bool exclusive)
-		: DocumentError(path)
+	MaximumValueError(Type const &limit, bool exclusive)
+		: DocumentError()
 		, limit_(limit)
 		, exclusive_(exclusive) {
 	}
 
 	virtual std::string GetDescription() const {
-		return ToString("Attribute ", path_, " must be ", exclusive_ ? "<" : "<=", limit_, ".");
+		return ToString("Attribute ", GetPath(), " must be ", exclusive_ ? "<" : "<=", limit_, ".");
 	}
 
 private:
@@ -96,7 +100,7 @@ private:
 
 class DivisibleValueError : public DocumentError {
 public:
-	DivisibleValueError(std::string const &path, double divisible_by);
+	explicit DivisibleValueError(double divisible_by);
 
 	virtual std::string GetDescription() const;
 
@@ -106,14 +110,14 @@ private:
 
 class AdditionalPropertyError : public DocumentError {
 public:
-	AdditionalPropertyError(std::string const &path);
+	AdditionalPropertyError();
 
 	virtual std::string GetDescription() const;
 }; // class AdditionalPropertyError : public DocumentError
 
 class DependenciesRestrictionsError : public DocumentError {
 public:
-	DependenciesRestrictionsError(std::string const &path, std::string const &name);
+	explicit DependenciesRestrictionsError(std::string const &name);
 
 	virtual std::string GetDescription() const;
 
@@ -123,7 +127,7 @@ private:
 
 class RequiredPropertyError : public DocumentError {
 public:
-	RequiredPropertyError(std::string const &path, std::string const &property);
+	explicit RequiredPropertyError(std::string const &property);
 
 	virtual std::string GetDescription() const;
 
@@ -133,7 +137,7 @@ private:
 
 class MinimalItemsCountError : public DocumentError {
 public:
-	MinimalItemsCountError(std::string const &path, size_t limit);
+	explicit MinimalItemsCountError(size_t limit);
 
 	virtual std::string GetDescription() const;
 
@@ -143,7 +147,7 @@ private:
 
 class MaximalItemsCountError : public DocumentError {
 public:
-	MaximalItemsCountError(std::string const &path, size_t limit);
+	explicit MaximalItemsCountError(size_t limit);
 
 	virtual std::string GetDescription() const;
 
@@ -153,35 +157,35 @@ private:
 
 class UniqueItemsError : public DocumentError {
 public:
-	UniqueItemsError(std::string const &path);
+	UniqueItemsError();
 
 	virtual std::string GetDescription() const;
 }; // class UniqueItemsError : public DocumentError
 
 class AdditionalItemsError : public DocumentError {
 public:
-	AdditionalItemsError(std::string const &path);
+	AdditionalItemsError();
 
 	virtual std::string GetDescription() const;
 }; // class AdditionalItemsError : public DocumentError
 
 class DisallowTypeError : public DocumentError {
 public:
-	DisallowTypeError(std::string const &path);
+	DisallowTypeError();
 
 	virtual std::string GetDescription() const;
 }; // class DisallowTypeError : public DocumentError
 
 class NeitherTypeError : public DocumentError {
 public:
-	NeitherTypeError(std::string const &path);
+	NeitherTypeError();
 
 	virtual std::string GetDescription() const;
 }; // class NeitherTypeError : public DocumentError
 
 class TypeError : public DocumentError {
 public:
-	TypeError(std::string const &path);
+	TypeError();
 
 	virtual std::string GetDescription() const;
 }; // class TypeError : public DocumentError
@@ -219,6 +223,7 @@ public:
 	}
 
 	std::string ErrorDescription() const;
+	void AddPath(std::string const &path);
 
 	operator bool() const;
 

@@ -178,6 +178,7 @@ void JsonObject::CheckTypeRestrictions(JsonValue const &json, ValidationContext 
 	for (auto const &member : GetMembers(json)) {
 		bool described_property = false;
 		char const *name = GetValue<char const *>(member.name);
+		MemberPathHolder path_holder(name, context);
 		auto propertyIt = properties_.find(name);
 		if (propertyIt != properties_.end()) {
 			propertyIt->second->Validate(member.value, context);
@@ -221,6 +222,7 @@ void JsonObject::CheckTypeRestrictions(JsonValue const &json, ValidationContext 
 				if (!context.GetResult()) return;
 			}
 		}
+		path_holder.Reset();
 	}
 	for (auto const &property : properties_) {
 		if (property.second->IsRequired() && !json.HasMember(property.first)) {
@@ -285,15 +287,19 @@ void JsonArray::CheckTypeRestrictions(JsonValue const &json, ValidationContext &
 
 	if (items_.exists) {
 		for (rapidjson::SizeType i = 0; i < json.Size(); ++i) {
+			ElementPathHolder path_holder(i, context);
 			items_.value->Validate(json[i], context);
 			if (!context.GetResult()) return;
+			path_holder.Reset();
 		}
 	}
 	else if (items_array_.exists) {
 		rapidjson::SizeType i = 0;
 		for (; i < json.Size() && i < items_array_.value.size(); ++i) {
+			ElementPathHolder path_holder(i, context);
 			items_array_.value[i]->Validate(json[i], context);
 			if (!context.GetResult()) return;
+			path_holder.Reset();
 		}
 		if (i < json.Size()) {
 			if (may_contains_additional_items_.exists) {
@@ -303,8 +309,10 @@ void JsonArray::CheckTypeRestrictions(JsonValue const &json, ValidationContext &
 			}
 			else if (additional_items_.exists) {
 				for (; i < json.Size(); ++i) {
+					ElementPathHolder path_holder(i, context);
 					additional_items_.value->Validate(json[i], context);
 					if (!context.GetResult()) return;
+					path_holder.Reset();
 				}
 			}
 		}

@@ -47,8 +47,7 @@ protected:
 	template <typename DocumentErrorType, typename... Args>
 	void RaiseError(ValidationContext &context, Args&&... args) const {
 		auto &result = context.GetResult();
-		auto path = context.GetPath(path_);
-		result.SetError<DocumentErrorType>(path, args...);
+		result.SetError<DocumentErrorType>(args...);
 	}
 	static void RaiseError(SchemaErrors error);
 	static JsonTypePtr CreateJsonTypeFromArrayElement(JsonValue const &schema,
