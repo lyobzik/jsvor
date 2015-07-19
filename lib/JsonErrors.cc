@@ -168,7 +168,9 @@ std::string ValidationResult::ErrorDescription() const {
 }
 
 void ValidationResult::AddPath(std::string const &path) {
-	error_->AddPath(path);
+	if (error_) {
+		error_->AddPath(path);
+	}
 }
 
 ValidationResult::operator bool() const {
