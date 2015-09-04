@@ -196,7 +196,8 @@ void JsonObject::CheckTypeRestrictions(JsonValue const &json, ValidationContext 
 		if (!described_property) {
 			if (may_contains_additional_properties_.exists) {
 				if (!may_contains_additional_properties_.value) {
-					return RaiseError<AdditionalPropertyError>(context);
+					path_holder.Reset();
+					return RaiseError<AdditionalPropertyError>(context, name);
 				}
 			}
 			else if (additional_properties_.exists) {

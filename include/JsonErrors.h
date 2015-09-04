@@ -110,9 +110,12 @@ private:
 
 class AdditionalPropertyError : public DocumentError {
 public:
-	AdditionalPropertyError();
+	AdditionalPropertyError(std::string const &name);
 
 	virtual std::string GetDescription() const;
+
+private:
+	std::string name_;
 }; // class AdditionalPropertyError : public DocumentError
 
 class DependenciesRestrictionsError : public DocumentError {

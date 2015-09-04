@@ -73,12 +73,13 @@ std::string DivisibleValueError::GetDescription() const {
 	return ToString("Element ", GetPath(), " must be divisible by ", divisible_by_, ".");
 }
 
-AdditionalPropertyError::AdditionalPropertyError()
-	: DocumentError() {
+AdditionalPropertyError::AdditionalPropertyError(std::string const &name)
+	: DocumentError()
+	, name_(name) {
 }
 
 std::string AdditionalPropertyError::GetDescription() const {
-	return ToString("Element ", GetPath(), " cannot contain additional property.");
+	return ToString("Element ", GetPath(), " cannot contain additional property '", name_, "'.");
 }
 
 DependenciesRestrictionsError::DependenciesRestrictionsError(std::string const &name)
