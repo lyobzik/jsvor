@@ -74,4 +74,4 @@ Dependencies
 * [JSON-Schema-Test-Suite](https://github.com/json-schema/JSON-Schema-Test-Suite) used for tests (**included**).
 * [re2](https://code.google.com/p/re2/) used by default for working with regex. If you define `USE_STD_REGEX` for working with regex will be used `std::regex`.
 * [WJElement](https://github.com/netmail-open/wjelement) used in project `perftests` for comparing of working speed.
-* [qmake](https://en.wikipedia.org/wiki/Qmake) used for generating makefiles.
+* [cmake](https://cmake.org/) and [qmake](https://en.wikipedia.org/wiki/Qmake) are used for build.
