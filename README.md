@@ -51,20 +51,20 @@ int main(int /*argc*/, char * /*argv*/[]) {
 
 void Print(std::string const &context, std::string const &value,
            jsvor::ValidationResult const &result) {
-	std::cout << std::boolalpha << context << " <" << value << ">:"
-	          << "(" << result << ") [" << static_cast<int>(result.Error()) << "] "
-	          << result.ErrorDescription() << "." << std::noboolalpha << std::endl;
+	auto errorDescription = (result ? "None." : result.ErrorDescription());
+	std::cout << std::boolalpha << context << " <" << value << ">:("
+		<< static_cast<bool>(result) << ") " << errorDescription << std::noboolalpha << std::endl;
 }
 ```
 Output:
 ```
-Validate(1) <{"data": 0}>:(false) [5] Inspected document not satisfied restriction on minimum.
-Validate(2) <{"data": 0}>:(false) [5] Inspected document not satisfied restriction on minimum.
-Validate(1) <{"data": 20}>:(true) [0] None.
-Validate(1) <{"data": 21}>:(false) [7] Inspected document not satisfied restriction on divisible.
-Validate(2) <{"data": 21}>:(false) [7] Inspected document not satisfied restriction on divisible.
-Validate(1) <{"data": 101}>:(false) [6] Inspected document not satisfied restriction on maximum.
-Validate(2) <{"data": 101}>:(false) [6] Inspected document not satisfied restriction on maximum.
+Validate(1) <{"data": 0}>:(false) Attribute /data must be >=10.
+Validate(2) <{"data": 0}>:(false) Attribute /data must be >=10.
+Validate(1) <{"data": 20}>:(true) None.
+Validate(1) <{"data": 21}>:(false) Element /data must be divisible by 2.
+Validate(2) <{"data": 21}>:(false) Element /data must be divisible by 2.
+Validate(1) <{"data": 101}>:(false) Attribute /data must be <=100.
+Validate(2) <{"data": 101}>:(false) Attribute /data must be <=100.
 ```
 
 Dependencies
@@ -74,4 +74,4 @@ Dependencies
 * [JSON-Schema-Test-Suite](https://github.com/json-schema/JSON-Schema-Test-Suite) used for tests (**included**).
 * [re2](https://code.google.com/p/re2/) used by default for working with regex. If you define `USE_STD_REGEX` for working with regex will be used `std::regex`.
 * [WJElement](https://github.com/netmail-open/wjelement) used in project `perftests` for comparing of working speed.
-* [qmake](https://en.wikipedia.org/wiki/Qmake) used for generating makefiles.
+* [cmake](https://cmake.org/) and [qmake](https://en.wikipedia.org/wiki/Qmake) are used for build.
