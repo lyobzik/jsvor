@@ -151,17 +151,15 @@ JsonTypeCreator JsonType::GetCreator(JsonValue const &type) {
 }
 
 JsonTypePtr JsonType::CreateJsonTypeFromArrayElement(JsonValue const &schema,
+                                                     JsonValue const &type,
 	                                                 JsonResolverPtr const &resolver,
                                                      std::string const &path) {
-	if (schema.IsObject()) {
-		return JsonType::Create(schema, resolver, path);
+
+	JsonTypeCreator creator = GetCreator(type);
+	if (type.IsObject()) {
+		return creator(type, resolver, path);
 	}
-	if (schema.IsString()) {
-		JsonTypeCreator creator = GetCreator(schema);
-		return creator((JsonValue()), resolver, path);
-	}
-	RaiseError(SchemaErrors::IncorrectType);
-	return JsonTypePtr();
+	return creator(schema, resolver, path);
 }
 
 void JsonType::RaiseError(SchemaErrors error) {

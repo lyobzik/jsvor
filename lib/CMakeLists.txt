@@ -45,6 +45,7 @@ set(HEADERS
 	Regex.h
 	ValidationContext.h
 	ValidationContext.inl
+	CoreSchema.inl
 	types/JsonTypeImpl.h
 	types/PrimitiveTypes.h
 	types/CustomTypes.h

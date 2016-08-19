@@ -15,6 +15,7 @@
 #include "../include/JsonSchema.h"
 
 #include <memory>
+#include <string>
 
 #include "../include/JsonResolver.h"
 
@@ -24,6 +25,36 @@
 namespace JsonSchemaValidator {
 
 namespace {
+
+#include "CoreSchema.inl"
+
+class CoreSchemaResolver
+{
+public:
+	CoreSchemaResolver() = default;
+	virtual ~CoreSchemaResolver() = default;
+
+	virtual JsonSchemaPtr Resolve(std::string const &ref) const {
+		return ref == "#" ? core_schema_ : JsonSchemaPtr();
+	}
+
+	void SetCoreSchema(JsonSchemaPtr const& core_schema) {
+		core_schema_ = core_schema;
+	}
+
+private:
+	JsonSchemaPtr core_schema_;
+};
+
+JsonSchemaPtr CreateCoreSchema() {
+	auto resolver = std::make_shared<CoreSchemaResolver>();
+	auto schema = std::make_shared<JsonSchema>(core_schema_draft03_desc,
+	                                           std::dynamic_pointer_cast<JsonResolver>(resolver));
+	resolver->SetCoreSchema(schema);
+	return schema;
+}
+
+static JsonSchemaPtr core_schema_draft03 = CreateCoreSchema();
 
 void Parse(char const *document, JsonDocument &json) {
 	json.Parse<0>(document);
@@ -134,6 +165,14 @@ void JsonSchema::Validate(JsonValue const &document, ValidationContext &context)
 }
 
 void JsonSchema::Initialize(JsonValue const &schema, JsonResolverPtr const &resolver) {
+	if ((!schema.HasMember("$schema") ||
+	     (schema.HasMember("$schema") && schema["$schema"].IsString() &&
+	      (schema["$schema"] == "http://json-schema.org/draft-03/schema#" ||
+	       schema["$schema"] == "http://json-schema.org/draft-03/schema"))) &&
+	    core_schema_draft03) {
+
+		core_schema_draft03->Validate(schema);
+	}
 	if (resolver) {
 		impl_->resolver_ = resolver;
 	}

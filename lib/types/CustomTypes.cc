@@ -27,13 +27,7 @@ namespace JsonSchemaValidator {
 JsonCustomType::JsonCustomType(JsonValue const &schema, JsonResolverPtr const &resolver,
                                std::string const &path)
 	: JsonType(schema, resolver, path)
-	, custom_type_() {
-
-	JsonValueMember const *type = FindMember(schema, "type");
-	if (!type) {
-		RaiseError(SchemaErrors::IncorrectCustomType);
-	}
-	custom_type_ = JsonType::Create(type->value, resolver, path);
+	, custom_type_(JsonType::Create(schema, resolver, path)) {
 }
 
 bool JsonCustomType::CheckValueType(JsonValue const &/*json*/) const {
@@ -65,15 +59,13 @@ JsonAny::JsonAny(JsonValue const &schema, JsonResolverPtr const &resolver,
 	if (disallow) {
 		if (disallow->value.IsArray()) {
 			for (JsonSizeType i = 0; i < disallow->value.Size(); ++i) {
-				JsonTypePtr json_type = CreateJsonTypeFromArrayElement(disallow->value[i],
-				                                                       resolver, path);
-				disallow_.insert(json_type);
+				disallow_.insert(CreateJsonTypeFromArrayElement(schema, disallow->value[i],
+				                                                resolver, path));
 			}
 		}
-		else if (disallow->value.IsObject() || disallow->value.IsString()) {
-			JsonTypePtr json_type = CreateJsonTypeFromArrayElement(disallow->value,
-			                                                       resolver, path);
-			disallow_.insert(json_type);
+		else if (disallow->value.IsString()) {
+			JsonTypeCreator creator = GetCreator(disallow->value);
+			disallow_.insert(creator((JsonValue()), resolver, path));
 		}
 		else {
 			RaiseError(SchemaErrors::IncorrectDisallowType);
@@ -122,18 +114,12 @@ JsonUnionType::JsonUnionType(JsonValue const &schema, JsonResolverPtr const &res
 	, type_() {
 
 	JsonValueMember const *type = FindMember(schema, "type");
-	if (!type || !(type->value.IsArray() || type->value.IsObject())) {
+	if (!type || !type->value.IsArray()) {
 		RaiseError(SchemaErrors::IncorrectUnionType);
-	}
-	if (type->value.IsArray()) {
+	} else if (type->value.IsArray()) {
 		for (JsonSizeType i = 0; i < type->value.Size(); ++i) {
-			JsonTypePtr json_type = CreateJsonTypeFromArrayElement(type->value[i], resolver, path);
-			type_.insert(json_type);
+			type_.insert(CreateJsonTypeFromArrayElement(schema, type->value[i], resolver, path));
 		}
-	}
-	else if (type->value.IsObject()) {
-		JsonTypeCreator creator = GetCreator(type->value);
-		type_.insert(creator(schema, resolver, path));
 	}
 }
 
