@@ -20,11 +20,11 @@ set(PROJECT_TYPE executable)
 include(../CMakeLists_header.txt)
 
 INCLUDE_DIRECTORIES(
-	   ../tests_common/
+	../tests_common/
 )
 
 set(SOURCES
-	   JsonSchemaTestSuite.cc
+	JsonSchemaTestSuite.cc
 )
 
 set(HEADERS

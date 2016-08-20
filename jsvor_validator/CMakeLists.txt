@@ -20,7 +20,7 @@ set(PROJECT_TYPE executable)
 include(../CMakeLists_header.txt)
 
 set(SOURCES
-	   JsvorValidator.cc
+    JsvorValidator.cc
 )
 
 set(HEADERS
