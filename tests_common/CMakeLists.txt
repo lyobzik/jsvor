@@ -20,13 +20,13 @@ set(PROJECT_TYPE library)
 include(../CMakeLists_header.txt)
 
 set(SOURCES
-	   Test.cc
-	   Validator.cc
+	Test.cc
+	Validator.cc
 )
 
 set(HEADERS
-		Test.h
-		Validator.h
+	Test.h
+	Validator.h
 )
 
 find_package(Boost COMPONENTS system filesystem REQUIRED)

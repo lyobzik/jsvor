@@ -65,6 +65,7 @@ protected:
 	}
 	static void RaiseError(SchemaErrors error);
 	static JsonTypePtr CreateJsonTypeFromArrayElement(JsonValue const &schema,
+	                                                  JsonValue const &type,
 	                                                  JsonResolverPtr const &resolver,
 	                                                  std::string const &path);
 
