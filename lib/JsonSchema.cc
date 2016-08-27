@@ -31,8 +31,8 @@ namespace {
 class CoreSchemaResolver
 {
 public:
-	CoreSchemaResolver() = default;
-	virtual ~CoreSchemaResolver() = default;
+	CoreSchemaResolver() {}
+	virtual ~CoreSchemaResolver() {}
 
 	virtual JsonSchemaPtr Resolve(std::string const &ref) const {
 		return ref == "#" ? core_schema_ : JsonSchemaPtr();
