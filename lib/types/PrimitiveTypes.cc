@@ -290,7 +290,7 @@ void JsonArray::CheckTypeRestrictions(JsonValue const &json, ValidationContext &
 		return RaiseError<MaximalItemsCountError>(context, max_items_);
 	}
 
-	if (unique_items_) {
+	if (unique_items_ && !json.Empty()) {
 		for (rapidjson::SizeType i = 0; i < json.Size() - 1; ++i) {
 			for (rapidjson::SizeType j = i + 1; j < json.Size(); ++j) {
 				if (IsEqual(json[i], json[j])) {
